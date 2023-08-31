@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: jlzhou
+
+labels:
+  - pairs:
+      app: chatbot
+    includeSelectors: false
+
+resources:
+  - ../third-party/redis
+  - deployment.yaml
+  - service.yaml
+
+configMapGenerator:
+  - name: chatbot
+    envs:
+      - params.env
+
+# currently knative does not recognize configmaps with suffix hash
+generatorOptions:
+  disableNameSuffixHash: true
+
+images:
+  - name: edwardlol/chatbot
+    newTag: v0.1.10
