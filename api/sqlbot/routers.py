@@ -161,11 +161,6 @@ async def generate(
                 agent_executor_kwargs={"memory": memory},
             )
 
-            history.session_id = f"{kubeflow_userid}:{message.conversation}"
-            stream_handler = StreamingLLMCallbackHandler(
-                websocket, message.conversation
-            )
-            llm.callbacks = [stream_handler]
             update_conversation_callback = UpdateConversationCallbackHandler(
                 message.conversation
             )

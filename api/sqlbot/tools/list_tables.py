@@ -14,7 +14,7 @@ class FakeAsyncListTablesTool(ListSQLDatabaseTool):
     name: str = "sql_db_list_tables"
     description: str = """
     Use this tool to list all tables in the database.
-    Input to this tool is an empty string, output is a comma separated list of table names in the database.
+    Input to this tool is an empty string, output is a dict with table names as keys and table descriptions as values.
     """
     schema_file: str = "schema.json"
     schemas: Any = None
@@ -25,6 +25,7 @@ class FakeAsyncListTablesTool(ListSQLDatabaseTool):
             with open(values["schema_file"]) as f:
                 values["schemas"] = json.load(f)
         # TODO: error handling
+        return values
 
     def _run(
         self,
