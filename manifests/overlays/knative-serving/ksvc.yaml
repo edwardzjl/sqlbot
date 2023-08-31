@@ -1,12 +1,12 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: chatbot
+  name: sqlbot
 spec:
   template:
     spec:
       containers:
-        - image: edwardlol/chatbot:latest
+        - image: edwardlol/sqlbot:latest
           args:
             - --host
             - "0.0.0.0"
@@ -14,7 +14,7 @@ spec:
             - "8080"
           envFrom:
             - configMapRef:
-                name: chatbot
+                name: sqlbot
           ports:
             - containerPort: 8080
           resources:

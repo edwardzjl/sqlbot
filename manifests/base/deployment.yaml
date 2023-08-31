@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: chatbot
+  name: sqlbot
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: chatbot
+      app: sqlbot
   template:
     metadata:
       labels:
-        app: chatbot
+        app: sqlbot
     spec:
       containers:
-        - name: chatbot
-          image: edwardlol/chatbot:latest
+        - name: sqlbot
+          image: edwardlol/sqlbot:latest
           args:
             - --host
             - "0.0.0.0"
@@ -22,7 +22,7 @@ spec:
             - "8080"
           envFrom:
             - configMapRef:
-                name: chatbot
+                name: sqlbot
           ports:
             - containerPort: 8080
           resources:

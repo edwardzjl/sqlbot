@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: chatbot
+  name: sqlbot
 spec:
   type: ClusterIP
   selector:
-    app: chatbot
+    app: sqlbot
   ports:
     - name: http
       port: 8080

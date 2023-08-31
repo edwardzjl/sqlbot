@@ -5,7 +5,7 @@ namespace: jlzhou
 
 labels:
   - pairs:
-      app: chatbot
+      app: sqlbot
     includeSelectors: false
 
 resources:
@@ -14,7 +14,7 @@ resources:
   - service.yaml
 
 configMapGenerator:
-  - name: chatbot
+  - name: sqlbot
     envs:
       - params.env
 
@@ -23,5 +23,5 @@ generatorOptions:
   disableNameSuffixHash: true
 
 images:
-  - name: edwardlol/chatbot
+  - name: edwardlol/sqlbot
     newTag: v0.1.10

@@ -1,4 +1,4 @@
-name: Chatbot API CI
+name: sqlbot API CI
 
 on:
   push:

@@ -19,9 +19,9 @@ RUN python -m pip install --no-cache-dir -U pip \
 COPY api/ .
 COPY --from=frontend-builder /build/build ./static
 
-RUN adduser --system --no-create-home --group chatbot \
-  && chown -R chatbot:chatbot /app
-USER chatbot:chatbot
+RUN adduser --system --no-create-home --group sqlbot \
+  && chown -R sqlbot:sqlbot /app
+USER sqlbot:sqlbot
 
-ENTRYPOINT [ "uvicorn", "chatbot.main:app" ]
+ENTRYPOINT [ "uvicorn", "sqlbot.main:app" ]
 CMD [ "--host", "0.0.0.0", "--port", "8080" ]
