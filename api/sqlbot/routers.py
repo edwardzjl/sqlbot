@@ -12,11 +12,11 @@ from sqlbot.callbacks import (
     UpdateConversationCallbackHandler,
 )
 from sqlbot.history import AppendSuffixHistory
-from sqlbot.prompts.vicuna import (
-    human_prefix,
-    ai_prefix,
-    human_suffix,
-    ai_suffix,
+from sqlbot.agent.prompts import (
+    HUMAN_PREFIX,
+    AI_PREFIX,
+    HUMAN_SUFFIX,
+    AI_SUFFIX,
 )
 from sqlbot.schemas import (
     ChatMessage,
@@ -63,8 +63,8 @@ async def get_conversation(
     conv = await Conversation.get(conversation_id)
     history = AppendSuffixHistory(
         url=settings.redis_om_url,
-        user_suffix=human_suffix,
-        ai_suffix=ai_suffix,
+        user_suffix=HUMAN_SUFFIX,
+        ai_suffix=AI_SUFFIX,
         session_id=f"{kubeflow_userid}:{conversation_id}",
     )
     return ConversationDetail(
@@ -135,20 +135,20 @@ async def generate(
                 temperature=0.1,
                 top_p=None,
                 repetition_penalty=1.03,
-                stop_sequences=["</s>"],
+                stop_sequences=["</s>", "Observation"],
                 callbacks=[stream_handler],
                 streaming=True,
             )
 
             history = AppendSuffixHistory(
                 url=settings.redis_om_url,
-                user_suffix=human_suffix,
-                ai_suffix=ai_suffix,
+                user_suffix=HUMAN_SUFFIX,
+                ai_suffix=AI_SUFFIX,
                 session_id=f"{kubeflow_userid}:{message.conversation}",
             )
             memory = ConversationBufferWindowMemory(
-                human_prefix=human_prefix,
-                ai_prefix=ai_prefix,
+                human_prefix=HUMAN_PREFIX,
+                ai_prefix=AI_PREFIX,
                 memory_key="history",
                 chat_memory=history,
             )
