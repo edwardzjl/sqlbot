@@ -1,8 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Header, Depends, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Header, WebSocket, WebSocketDisconnect
 from langchain.llms import HuggingFaceTextGenInference
-from langchain.memory import ConversationBufferWindowMemory, RedisChatMessageHistory
+from langchain.memory import ConversationBufferWindowMemory
 from langchain.sql_database import SQLDatabase
 from loguru import logger
 
@@ -34,13 +34,18 @@ router = APIRouter(
 )
 
 
-def get_message_history() -> RedisChatMessageHistory:
-    return AppendSuffixHistory(
-        url=settings.redis_om_url,
-        user_suffix=human_suffix,
-        ai_suffix=ai_suffix,
-        session_id="sid",  # a fake session id as it is required
-    )
+coder_llm = HuggingFaceTextGenInference(
+    inference_server_url=settings.isvc_coder_llm,
+    max_new_tokens=512,
+    temperature=0.1,
+    top_p=None,
+    repetition_penalty=1.1,
+    stop_sequences=["</s>"],
+)
+db = SQLDatabase.from_uri(settings.warehouse_url, sample_rows_in_table_info=3)
+toolkit = CustomSQLDatabaseToolkit(
+    db=db, llm=coder_llm, schema_file=settings.schema_file
+)
 
 
 @router.get("/conversations", response_model=list[Conversation])
@@ -53,11 +58,15 @@ async def get_conversations(kubeflow_userid: Annotated[str | None, Header()] = N
 @router.get("/conversations/{conversation_id}", response_model=ConversationDetail)
 async def get_conversation(
     conversation_id: str,
-    history: Annotated[RedisChatMessageHistory, Depends(get_message_history)],
     kubeflow_userid: Annotated[str | None, Header()] = None,
 ):
     conv = await Conversation.get(conversation_id)
-    history.session_id = f"{kubeflow_userid}:{conversation_id}"
+    history = AppendSuffixHistory(
+        url=settings.redis_om_url,
+        user_suffix=human_suffix,
+        ai_suffix=ai_suffix,
+        session_id=f"{kubeflow_userid}:{conversation_id}",
+    )
     return ConversationDetail(
         messages=[
             ChatMessage(
@@ -105,13 +114,9 @@ async def delete_conversation(
     await Conversation.delete(conversation_id)
 
 
-db = SQLDatabase.from_uri(settings.warehouse_url, sample_rows_in_table_info=3)
-
-
 @router.websocket("/chat")
 async def generate(
     websocket: WebSocket,
-    history: Annotated[RedisChatMessageHistory, Depends(get_message_history)],
     kubeflow_userid: Annotated[str | None, Header()] = None,
 ):
     await websocket.accept()
@@ -125,7 +130,7 @@ async def generate(
                 websocket, message.conversation
             )
             llm = HuggingFaceTextGenInference(
-                inference_server_url=settings.inference_server_url,
+                inference_server_url=settings.isvc_llm,
                 max_new_tokens=512,
                 temperature=0.1,
                 top_p=None,
@@ -134,8 +139,13 @@ async def generate(
                 callbacks=[stream_handler],
                 streaming=True,
             )
-            toolkit = CustomSQLDatabaseToolkit(db=db, llm=llm)
 
+            history = AppendSuffixHistory(
+                url=settings.redis_om_url,
+                user_suffix=human_suffix,
+                ai_suffix=ai_suffix,
+                session_id=f"{kubeflow_userid}:{message.conversation}",
+            )
             memory = ConversationBufferWindowMemory(
                 human_prefix=human_prefix,
                 ai_prefix=ai_prefix,

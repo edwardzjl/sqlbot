@@ -12,25 +12,23 @@ from sqlbot.tools import (
 
 
 class CustomSQLDatabaseToolkit(SQLDatabaseToolkit):
+    schema_file: str = "schema.json"
+
     def get_tools(self) -> list[BaseTool]:
         """Get the tools in the toolkit."""
-        list_sql_database_tool_description = (
-            "Use this tool to list all table names in the database. "
-            "Input to this tool is an empty string, output is a comma separated list of table names in the database."
+        list_tables_tool = FakeAsyncListTablesTool(
+            db=self.db, schema_file=self.schema_file
         )
-        list_sql_database_tool = FakeAsyncListTablesTool(
-            db=self.db, description=list_sql_database_tool_description
-        )
-        info_sql_database_tool_description = (
+        table_schema_tool_description = (
             "Use this tool to get the schema of specific tables. "
             "Input to this tool is a comma-separated list of tables, output is the "
             "schema and sample rows for those tables. "
             "Be sure that the tables actually exist by calling "
-            f"{list_sql_database_tool.name} first! "
+            f"{list_tables_tool.name} first! "
             "Example Input: 'table1, table2, table3'"
         )
-        info_sql_database_tool = FakeAsyncTableSchemaTool(
-            db=self.db, description=info_sql_database_tool_description
+        table_schema_tool = FakeAsyncTableSchemaTool(
+            db=self.db, description=table_schema_tool_description
         )
         query_sql_database_tool_description = (
             "Use this tool to execute query and get result from the database. "
@@ -38,7 +36,7 @@ class CustomSQLDatabaseToolkit(SQLDatabaseToolkit):
             "If the query is not correct, an error message will be returned. "
             "If an error is returned, rewrite the query and try again. "
             "If you encounter an issue with Unknown column "
-            f"'xxxx' in 'field list', or no such column 'xxxx', use {info_sql_database_tool.name} "
+            f"'xxxx' in 'field list', or no such column 'xxxx', use {table_schema_tool.name} "
             "to query the correct table columns."
         )
         query_sql_database_tool = FakeAsyncQuerySQLDataBaseTool(
@@ -54,7 +52,7 @@ class CustomSQLDatabaseToolkit(SQLDatabaseToolkit):
         )
         return [
             query_sql_database_tool,
-            info_sql_database_tool,
-            list_sql_database_tool,
+            table_schema_tool,
+            list_tables_tool,
             query_sql_checker_tool,
         ]

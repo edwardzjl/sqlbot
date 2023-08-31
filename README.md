@@ -31,4 +31,6 @@ Key | Default Value | Description
 ---|---|---
 LOG_LEVEL | `INFO` | log level
 REDIS_OM_URL | `redis://localhost:6379` | Redis url to persist messages and metadata
-INFERENCE_SERVER_URL | `http://localhost:8080` | model service url
+ISVC_LLM | `http://localhost:8080` | model service url
+ISVC_CODER_LLM | `http://localhost:8081` | coder model service url, used for generating and checking SQL queries
+WAREHOUSE_URL | `postgresql+psycopg://postgres:postgres@localhost:5432/` | data warehouse url, in which you want to analyze the data
