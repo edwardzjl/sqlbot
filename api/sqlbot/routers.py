@@ -105,10 +105,8 @@ async def delete_conversation(
     await Conversation.delete(conversation_id)
 
 
-db = SQLDatabase.from_uri(
-    settings.warehouse_url,
-    sample_rows_in_table_info=3
-)
+db = SQLDatabase.from_uri(settings.warehouse_url, sample_rows_in_table_info=3)
+
 
 @router.websocket("/chat")
 async def generate(
@@ -123,7 +121,9 @@ async def generate(
             payload: str = await websocket.receive_text()
             message = ChatMessage.parse_raw(payload)
 
-            stream_handler = StreamingLLMCallbackHandler(websocket, message.conversation)
+            stream_handler = StreamingLLMCallbackHandler(
+                websocket, message.conversation
+            )
             llm = HuggingFaceTextGenInference(
                 inference_server_url=settings.inference_server_url,
                 max_new_tokens=512,
@@ -144,13 +144,13 @@ async def generate(
             )
             agent_executor = create_sql_agent(
                 llm=llm,
-                toolkit=toolkit, 
+                toolkit=toolkit,
                 top_k=5,
                 verbose=True,
                 max_iterations=5,
                 agent_executor_kwargs={"memory": memory},
             )
-            
+
             history.session_id = f"{kubeflow_userid}:{message.conversation}"
             stream_handler = StreamingLLMCallbackHandler(
                 websocket, message.conversation

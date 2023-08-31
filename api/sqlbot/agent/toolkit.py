@@ -4,9 +4,9 @@ from langchain.agents.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from langchain.tools import BaseTool
 from langchain.tools.sql_database.tool import QuerySQLCheckerTool
 
-from sqlbot.agent.tools import (
-    FakeAsyncInfoSQLDatabaseTool,
-    FakeAsyncListSQLDatabaseTool,
+from sqlbot.tools import (
+    FakeAsyncTableSchemaTool,
+    FakeAsyncListTablesTool,
     FakeAsyncQuerySQLDataBaseTool,
 )
 
@@ -18,7 +18,7 @@ class CustomSQLDatabaseToolkit(SQLDatabaseToolkit):
             "Use this tool to list all table names in the database. "
             "Input to this tool is an empty string, output is a comma separated list of table names in the database."
         )
-        list_sql_database_tool = FakeAsyncListSQLDatabaseTool(
+        list_sql_database_tool = FakeAsyncListTablesTool(
             db=self.db, description=list_sql_database_tool_description
         )
         info_sql_database_tool_description = (
@@ -29,7 +29,7 @@ class CustomSQLDatabaseToolkit(SQLDatabaseToolkit):
             f"{list_sql_database_tool.name} first! "
             "Example Input: 'table1, table2, table3'"
         )
-        info_sql_database_tool = FakeAsyncInfoSQLDatabaseTool(
+        info_sql_database_tool = FakeAsyncTableSchemaTool(
             db=self.db, description=info_sql_database_tool_description
         )
         query_sql_database_tool_description = (
