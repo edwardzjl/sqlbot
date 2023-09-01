@@ -6,7 +6,7 @@ If the question does not seem related to the database contents, simply return "I
 
 FORMAT_INSTRUCTIONS = """Use a JSON blob to specify a tool by providing an "action" key (tool name) and an "action_input" key (tool input).
 
-Valid "action" values are: "Final Answer" or any of the {tool_names}.
+Valid "action" values are: any of the {tool_names}.
 
 Provide only ONE action per $JSON_BLOB, formatted like:
 
@@ -28,13 +28,8 @@ $JSON_BLOB
 Observation: action result
 ... (repeat Thought/Action/Observation N times)
 Thought: I know the final answer
-Action:
-```
-{{{{
-  "action": "Final Answer",
-  "action_input": "Final response to human"
-}}}}
-```"""
+Final Answer: Final response to human
+"""
 
 SQL_SUFFIX = """You should first examine the database tables to identify which ones are most relevant for answering the question. Then, query the schema of the most promising tables to further understand their structure and contents. With this knowledge, construct appropriate SQL queries to retrieve the information needed to answer the question.
 Execute the queries, analyze the results, and derive the final answer. Remember to provide the final response in Chinese. Let's begin!"""
