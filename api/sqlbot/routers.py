@@ -9,6 +9,7 @@ from loguru import logger
 from sqlbot.agent import create_sql_agent, CustomSQLDatabaseToolkit
 from sqlbot.callbacks import (
     UpdateConversationCallbackHandler,
+    StreamingIntermediateThoughtCallbackHandler,
     FinalStreamingWebsocketCallbackHandler,
 )
 from sqlbot.history import AppendSuffixHistory
@@ -126,7 +127,10 @@ async def generate(
             payload: str = await websocket.receive_text()
             message = ChatMessage.parse_raw(payload)
 
-            stream_handler = FinalStreamingWebsocketCallbackHandler(
+            final_answer_stream_handler = FinalStreamingWebsocketCallbackHandler(
+                websocket, message.conversation
+            )
+            thought_stream_handler = StreamingIntermediateThoughtCallbackHandler(
                 websocket, message.conversation
             )
             llm = HuggingFaceTextGenInference(
@@ -136,7 +140,7 @@ async def generate(
                 top_p=None,
                 repetition_penalty=1.03,
                 stop_sequences=["</s>", "Observation"],
-                callbacks=[stream_handler],
+                callbacks=[thought_stream_handler, final_answer_stream_handler],
                 streaming=True,
             )
 
