@@ -22,7 +22,7 @@ class FakeAsyncListTablesTool(ListSQLDatabaseTool):
     @root_validator(pre=True)
     def load_schemas(cls, values):
         if "schema_file" in values:
-            with open(values["schema_file"]) as f:
+            with open(values["schema_file"], encoding="utf-8") as f:
                 values["schemas"] = json.load(f)
         # TODO: error handling
         return values
