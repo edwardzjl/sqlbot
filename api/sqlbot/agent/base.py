@@ -8,12 +8,30 @@ from langchain.agents.structured_chat.output_parser import (
 )
 from langchain.callbacks.base import BaseCallbackManager
 from langchain.chains.llm import LLMChain
+from langchain.schema import AgentAction
 from langchain.schema.language_model import BaseLanguageModel
 
 from sqlbot.agent.prompts import SQL_PREFIX, SQL_SUFFIX, FORMAT_INSTRUCTIONS
 from sqlbot.agent.toolkit import SQLBotToolkit
 from sqlbot.agent.output_parser import StripFinalAnswerPrefixStructuredChatOutputParser
 
+
+class AppendThoughtAgent(StructuredChatAgent):
+    def _construct_scratchpad(
+        self, intermediate_steps: List[tuple[AgentAction, str]]
+    ) -> str:
+        agent_scratchpad = super(StructuredChatAgent, self)._construct_scratchpad(intermediate_steps)
+        # agent_scratchpad = Agent._construct_scratchpad(intermediate_steps)
+        if not isinstance(agent_scratchpad, str):
+            raise ValueError("agent_scratchpad should be of type string.")
+        if agent_scratchpad:
+            return (
+                f"This was your previous work "
+                f"(but I haven't seen any of it! I only see what "
+                f"you return as final answer):\n{self.llm_prefix}{agent_scratchpad}"
+            )
+        else:
+            return self.llm_prefix
 
 def create_sql_agent(
     llm: BaseLanguageModel,
@@ -32,7 +50,7 @@ def create_sql_agent(
     tools = toolkit.get_tools()
     prefix = SQL_PREFIX.format(dialect=toolkit.dialect, top_k=top_k)
 
-    prompt = StructuredChatAgent.create_prompt(
+    prompt = AppendThoughtAgent.create_prompt(
         tools,
         prefix=prefix,
         suffix=SQL_SUFFIX,
@@ -48,7 +66,7 @@ def create_sql_agent(
     output_parser = StructuredChatOutputParserWithRetries(
         base_parser=StripFinalAnswerPrefixStructuredChatOutputParser()
     )
-    agent = StructuredChatAgent(
+    agent = AppendThoughtAgent(
         llm_chain=llm_chain,
         allowed_tools=tool_names,
         output_parser=output_parser,

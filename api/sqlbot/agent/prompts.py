@@ -28,8 +28,7 @@ $JSON_BLOB
 Observation: action result
 ... (repeat Thought/Action/Observation N times)
 Thought: I know the final answer
-Final Answer: Final response to human
-"""
+Final Answer: Final response to human"""
 
 SQL_SUFFIX = """You should first examine the database tables to identify which ones are most relevant for answering the question. Then, query the schema of the most promising tables to further understand their structure and contents. With this knowledge, construct appropriate SQL queries to retrieve the information needed to answer the question.
 Execute the queries, analyze the results, and derive the final answer. Remember to provide the final response in Chinese. Let's begin!"""
