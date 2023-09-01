@@ -37,7 +37,7 @@ class CustomSQLDatabaseToolkit(SQLDatabaseToolkit):
             "If an error is returned, rewrite the query and try again. "
             "If you encounter an issue with Unknown column "
             f"'xxxx' in 'field list', or no such column 'xxxx', use {table_schema_tool.name} "
-            "to query the correct table columns."
+            "to get the correct table columns."
         )
         query_sql_database_tool = FakeAsyncQuerySQLDataBaseTool(
             db=self.db, description=query_sql_database_tool_description
