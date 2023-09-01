@@ -3,13 +3,16 @@ from typing import Any, Dict, List, Optional
 
 from langchain.agents.agent import AgentExecutor
 from langchain.agents.structured_chat.base import StructuredChatAgent
+from langchain.agents.structured_chat.output_parser import (
+    StructuredChatOutputParserWithRetries,
+)
 from langchain.callbacks.base import BaseCallbackManager
 from langchain.chains.llm import LLMChain
 from langchain.schema.language_model import BaseLanguageModel
 
-
 from sqlbot.agent.prompts import SQL_PREFIX, SQL_SUFFIX, FORMAT_INSTRUCTIONS
 from sqlbot.agent.toolkit import CustomSQLDatabaseToolkit
+from sqlbot.agent.output_parser import StripFinalAnswerPrefixStructuredChatOutputParser
 
 
 def create_sql_agent(
@@ -42,7 +45,15 @@ def create_sql_agent(
         callback_manager=callback_manager,
     )
     tool_names = [tool.name for tool in tools]
-    agent = StructuredChatAgent(llm_chain=llm_chain, allowed_tools=tool_names, **kwargs)
+    output_parser = StructuredChatOutputParserWithRetries(
+        base_parser=StripFinalAnswerPrefixStructuredChatOutputParser()
+    )
+    agent = StructuredChatAgent(
+        llm_chain=llm_chain,
+        allowed_tools=tool_names,
+        output_parser=output_parser,
+        **kwargs,
+    )
 
     return AgentExecutor.from_agent_and_tools(
         agent=agent,
