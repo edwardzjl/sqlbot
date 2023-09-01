@@ -6,7 +6,7 @@ from langchain.memory import ConversationBufferWindowMemory
 from langchain.sql_database import SQLDatabase
 from loguru import logger
 
-from sqlbot.agent import create_sql_agent, CustomSQLDatabaseToolkit
+from sqlbot.agent import create_sql_agent, SQLBotToolkit
 from sqlbot.callbacks import (
     UpdateConversationCallbackHandler,
     StreamingIntermediateThoughtCallbackHandler,
@@ -44,9 +44,6 @@ coder_llm = HuggingFaceTextGenInference(
     stop_sequences=["</s>"],
 )
 db = SQLDatabase.from_uri(settings.warehouse_url, sample_rows_in_table_info=3)
-toolkit = CustomSQLDatabaseToolkit(
-    db=db, llm=coder_llm, schema_file=settings.schema_file
-)
 
 
 @router.get("/conversations", response_model=list[Conversation])
@@ -144,6 +141,14 @@ async def generate(
                 streaming=True,
             )
 
+            toolkit = SQLBotToolkit(
+                db=db,
+                llm=coder_llm,
+                schema_file=settings.schema_file,
+                websocket=websocket,
+                conversation_id=message.conversation,
+            )
+
             history = AppendSuffixHistory(
                 url=settings.redis_om_url,
                 user_suffix=HUMAN_SUFFIX,
@@ -156,19 +161,21 @@ async def generate(
                 memory_key="history",
                 chat_memory=history,
             )
+            update_conversation_callback = UpdateConversationCallbackHandler(
+                message.conversation
+            )
             agent_executor = create_sql_agent(
                 llm=llm,
                 toolkit=toolkit,
                 top_k=5,
                 verbose=True,
-                max_iterations=5,
-                agent_executor_kwargs={"memory": memory},
+                max_iterations=10,
+                agent_executor_kwargs={
+                    "memory": memory,
+                    "callbacks": [update_conversation_callback],
+                },
             )
 
-            update_conversation_callback = UpdateConversationCallbackHandler(
-                message.conversation
-            )
-            agent_executor.callbacks = [update_conversation_callback]
             await agent_executor.arun(message.content)
         except WebSocketDisconnect:
             logger.info("websocket disconnected")

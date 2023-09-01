@@ -11,13 +11,13 @@ from langchain.chains.llm import LLMChain
 from langchain.schema.language_model import BaseLanguageModel
 
 from sqlbot.agent.prompts import SQL_PREFIX, SQL_SUFFIX, FORMAT_INSTRUCTIONS
-from sqlbot.agent.toolkit import CustomSQLDatabaseToolkit
+from sqlbot.agent.toolkit import SQLBotToolkit
 from sqlbot.agent.output_parser import StripFinalAnswerPrefixStructuredChatOutputParser
 
 
 def create_sql_agent(
     llm: BaseLanguageModel,
-    toolkit: CustomSQLDatabaseToolkit,
+    toolkit: SQLBotToolkit,
     callback_manager: Optional[BaseCallbackManager] = None,
     input_variables: Optional[List[str]] = None,
     top_k: int = 10,
