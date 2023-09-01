@@ -10,7 +10,7 @@ from sqlbot.agent import create_sql_agent, CustomSQLDatabaseToolkit
 from sqlbot.callbacks import (
     UpdateConversationCallbackHandler,
     StreamingIntermediateThoughtCallbackHandler,
-    FinalStreamingWebsocketCallbackHandler,
+    StreamingFinalAnswerCallbackHandler,
 )
 from sqlbot.history import AppendSuffixHistory
 from sqlbot.agent.prompts import (
@@ -127,7 +127,7 @@ async def generate(
             payload: str = await websocket.receive_text()
             message = ChatMessage.parse_raw(payload)
 
-            final_answer_stream_handler = FinalStreamingWebsocketCallbackHandler(
+            final_answer_stream_handler = StreamingFinalAnswerCallbackHandler(
                 websocket, message.conversation
             )
             thought_stream_handler = StreamingIntermediateThoughtCallbackHandler(
