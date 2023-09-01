@@ -8,8 +8,8 @@ from loguru import logger
 
 from sqlbot.agent import create_sql_agent, CustomSQLDatabaseToolkit
 from sqlbot.callbacks import (
-    StreamingLLMCallbackHandler,
     UpdateConversationCallbackHandler,
+    FinalStreamingWebsocketCallbackHandler,
 )
 from sqlbot.history import AppendSuffixHistory
 from sqlbot.agent.prompts import (
@@ -126,7 +126,7 @@ async def generate(
             payload: str = await websocket.receive_text()
             message = ChatMessage.parse_raw(payload)
 
-            stream_handler = StreamingLLMCallbackHandler(
+            stream_handler = FinalStreamingWebsocketCallbackHandler(
                 websocket, message.conversation
             )
             llm = HuggingFaceTextGenInference(
