@@ -35,7 +35,9 @@ class StripFinalAnswerPrefixStructuredChatOutputParser(StructuredChatOutputParse
             else:
                 prefix_found = text.find("Final Answer:")
                 if prefix_found != -1:
-                    return AgentFinish({"output": text[prefix_found + 13 :].strip()}, text)
+                    return AgentFinish(
+                        {"output": text[prefix_found + 13 :].strip()}, text
+                    )
                 return AgentFinish({"output": text.strip()}, text)
         except Exception as e:
             raise OutputParserException(f"Could not parse LLM output: {text}") from e
