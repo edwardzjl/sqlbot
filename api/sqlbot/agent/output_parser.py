@@ -21,7 +21,7 @@ class StripFinalAnswerPrefixStructuredChatOutputParser(StructuredChatOutputParse
         try:
             action_match = self.pattern.search(text)
             if action_match is not None:
-                response = json.loads(action_match.group(1).strip(), strict=False)
+                response: dict = json.loads(action_match.group(1).strip(), strict=False)
                 if isinstance(response, list):
                     # gpt turbo frequently ignores the directive to emit a single action
                     logger.warning("Got multiple action responses: %s", response)
@@ -29,9 +29,17 @@ class StripFinalAnswerPrefixStructuredChatOutputParser(StructuredChatOutputParse
                 if response["action"] == "Final Answer":
                     return AgentFinish({"output": response["action_input"]}, text)
                 else:
-                    return AgentAction(
-                        response["action"], response.get("action_input", {}), text
-                    )
+                    action = response.pop("action")
+                    # sometimes our LLM will return {"action": $action, "foo": $action_input}
+                    if "action_input" not in response and len(response) > 0:
+                        k, v = response.popitem()
+                        logger.warning(
+                            f"action_input not found, using {k} as action_input"
+                        )
+                        action_input = v
+                    else:
+                        action_input = response.get("action_input", {})
+                    return AgentAction(action, action_input, text)
             else:
                 prefix_found = text.find("Final Answer:")
                 if prefix_found != -1:
