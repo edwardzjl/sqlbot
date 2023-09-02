@@ -20,7 +20,9 @@ class AppendThoughtAgent(StructuredChatAgent):
     def _construct_scratchpad(
         self, intermediate_steps: List[tuple[AgentAction, str]]
     ) -> str:
-        agent_scratchpad = super(StructuredChatAgent, self)._construct_scratchpad(intermediate_steps)
+        agent_scratchpad = super(StructuredChatAgent, self)._construct_scratchpad(
+            intermediate_steps
+        )
         # agent_scratchpad = Agent._construct_scratchpad(intermediate_steps)
         if not isinstance(agent_scratchpad, str):
             raise ValueError("agent_scratchpad should be of type string.")
@@ -32,6 +34,7 @@ class AppendThoughtAgent(StructuredChatAgent):
             )
         else:
             return self.llm_prefix
+
 
 def create_sql_agent(
     llm: BaseLanguageModel,
