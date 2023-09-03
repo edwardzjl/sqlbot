@@ -42,7 +42,7 @@ class WebsocketHumanApprovalCallbackHandler(WebsocketCallbackHandler):
                 id=run_id,
                 conversation=self.conversation_id,
                 from_="ai",
-                content=f"running sql: \n{input_str}",
+                content=f"executing sql:\n```sql\n{input_str}\n```",
                 type="text",
             )
             await self.websocket.send_json(message.dict())
