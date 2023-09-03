@@ -144,7 +144,7 @@ async def generate(
             toolkit = SQLBotToolkit(
                 db=db,
                 llm=coder_llm,
-                schema_file=settings.schema_file,
+                redis_url=settings.redis_om_url,
                 websocket=websocket,
                 conversation_id=message.conversation,
             )

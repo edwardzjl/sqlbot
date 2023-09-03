@@ -4,24 +4,25 @@ from fastapi import WebSocket
 from langchain.agents.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from langchain.tools import BaseTool
 from langchain.tools.sql_database.tool import QuerySQLCheckerTool
+from pydantic import RedisDsn
 
 from sqlbot.callbacks import WebsocketHumanApprovalCallbackHandler
 from sqlbot.tools import (
     FakeAsyncTableSchemaTool,
-    FakeAsyncListTablesTool,
+    CustomListTablesTool,
     FakeAsyncQuerySQLDataBaseTool,
 )
 
 
 class SQLBotToolkit(SQLDatabaseToolkit):
-    schema_file: str = "schema.json"
+    redis_url: RedisDsn = "redis://localhost:6379"
     websocket: WebSocket
     conversation_id: str
 
     def get_tools(self) -> list[BaseTool]:
         """Get the tools in the toolkit."""
-        list_tables_tool = FakeAsyncListTablesTool(
-            db=self.db, schema_file=self.schema_file
+        list_tables_tool = CustomListTablesTool(
+            db=self.db, redis_url=self.redis_url
         )
         table_schema_tool_description = (
             "Use this tool to get the schema of specific tables. "
