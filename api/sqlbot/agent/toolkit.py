@@ -21,9 +21,7 @@ class SQLBotToolkit(SQLDatabaseToolkit):
 
     def get_tools(self) -> list[BaseTool]:
         """Get the tools in the toolkit."""
-        list_tables_tool = CustomListTablesTool(
-            db=self.db, redis_url=self.redis_url
-        )
+        list_tables_tool = CustomListTablesTool(db=self.db, redis_url=self.redis_url)
         table_schema_tool_description = (
             "Use this tool to get the schema of specific tables. "
             "Input to this tool is a comma-separated list of tables, output is the "

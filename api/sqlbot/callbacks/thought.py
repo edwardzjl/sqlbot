@@ -9,6 +9,7 @@ from sqlbot.schemas import ChatMessage
 DEFAULT_ACTION_PREFFIX_TOKEN = "Action"
 DEFAULT_ANSWER_PREFIX_TOKENS = ["Final", " Answer", ":"]
 
+
 class StreamingIntermediateThoughtCallbackHandler(WebsocketCallbackHandler):
     """Streaming intermediate thought to websocket.
     Typically, during agent execution, the initial messages represent intermediate thoughts, which are followed by an "action."
@@ -104,7 +105,7 @@ class StreamingIntermediateThoughtCallbackHandler(WebsocketCallbackHandler):
         if self.answer_reached():
             self.thinking = False
             return
-        
+
         if "" in self.last_tokens:
             # self.last_tokens is not full yet, we cannot deside whether the answer is reached
             return
