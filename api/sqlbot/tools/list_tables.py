@@ -20,9 +20,6 @@ class CustomListTablesTool(ListSQLDatabaseTool):
     client: Any = None
     # aclient: Any = None
 
-    # schema_file: str = "schema.json"
-    # schemas: Any = None
-
     @root_validator(pre=True)
     def validate_environment(cls, values):
         from redis import Redis

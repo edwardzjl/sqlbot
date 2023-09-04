@@ -8,7 +8,7 @@ from pydantic import RedisDsn
 
 from sqlbot.callbacks import WebsocketHumanApprovalCallbackHandler
 from sqlbot.tools import (
-    FakeAsyncTableSchemaTool,
+    CustomTableSchemaTool,
     CustomListTablesTool,
     FakeAsyncQuerySQLDataBaseTool,
 )
@@ -30,8 +30,10 @@ class SQLBotToolkit(SQLDatabaseToolkit):
             f"{list_tables_tool.name} first! "
             "Example Input: 'table1, table2, table3'"
         )
-        table_schema_tool = FakeAsyncTableSchemaTool(
-            db=self.db, description=table_schema_tool_description
+        table_schema_tool = CustomTableSchemaTool(
+            db=self.db,
+            description=table_schema_tool_description,
+            redis_url=self.redis_url,
         )
         query_sql_database_tool_description = (
             "Use this tool to execute query and get result from the database. "
