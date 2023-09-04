@@ -10,6 +10,7 @@ labels:
 
 resources:
   - ../third-party/redis
+  - ../third-party/postgres/base
   - deployment.yaml
   - service.yaml
 
@@ -24,4 +25,4 @@ generatorOptions:
 
 images:
   - name: edwardlol/sqlbot
-    newTag: v0.1.10
+    newTag: v0.0.5

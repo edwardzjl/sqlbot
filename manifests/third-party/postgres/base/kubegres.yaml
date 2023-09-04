@@ -1,0 +1,30 @@
+apiVersion: kubegres.reactive-tech.io/v1
+kind: Kubegres
+metadata:
+   name: postgres
+spec:
+   replicas: 3
+   image: postgres:15.0
+   database:
+      size: 10Gi
+   # Kubegres does not support envFrom, so we have to list them one by one.
+   env:
+      - name: POSTGRES_PASSWORD
+        valueFrom:
+           secretKeyRef:
+              name: postgres
+              key: SUPER_USER_PASSWORD
+      - name: POSTGRES_REPLICATION_PASSWORD
+        valueFrom:
+           secretKeyRef:
+              name: postgres
+              key: REPLICATION_USER_PASSWORD
+   probe:
+      livenessProbe:
+         tcpSocket:
+            port: 5432
+         initialDelaySeconds: 60 # init script takes about 30s to complete
+      readinessProbe:
+         tcpSocket:
+            port: 5432
+         initialDelaySeconds: 60 # init script takes about 30s to complete
