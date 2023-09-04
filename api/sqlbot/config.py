@@ -10,8 +10,6 @@ class Settings(BaseSettings):
     warehouse_url: PostgresDsn = (
         "postgresql+psycopg://postgres:postgres@localhost:5432/"
     )
-    schema_file: str = "/etc/sqlbot/schema.json"
-    """JSON file containing table names and their descriptions"""
 
 
 settings = Settings()
