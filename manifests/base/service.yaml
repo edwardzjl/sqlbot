@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqlbot
+spec:
+  type: ClusterIP
+  selector:
+    app: sqlbot
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000

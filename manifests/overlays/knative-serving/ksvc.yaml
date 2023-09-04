@@ -1,0 +1,26 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: sqlbot
+spec:
+  template:
+    spec:
+      containers:
+        - image: edwardlol/sqlbot:latest
+          args:
+            - --host
+            - "0.0.0.0"
+            - --port
+            - "8000"
+          envFrom:
+            - configMapRef:
+                name: sqlbot
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: "1"
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 1Gi

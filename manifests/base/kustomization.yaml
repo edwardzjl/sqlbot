@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: jlzhou
+
+labels:
+  - pairs:
+      app: sqlbot
+    includeSelectors: false
+
+resources:
+  - ../third-party/redis
+  - ../third-party/postgres/base
+  - deployment.yaml
+  - service.yaml
+
+configMapGenerator:
+  - name: sqlbot
+    envs:
+      - params.env
+
+# currently knative does not recognize configmaps with suffix hash
+generatorOptions:
+  disableNameSuffixHash: true
+
+images:
+  - name: edwardlol/sqlbot
+    newTag: v0.0.5
