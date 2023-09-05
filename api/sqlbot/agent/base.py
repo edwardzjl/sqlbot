@@ -8,7 +8,7 @@ from langchain.agents.structured_chat.output_parser import (
 )
 from langchain.callbacks.base import BaseCallbackManager
 from langchain.chains.llm import LLMChain
-from langchain.schema import AgentAction
+from langchain.schema import AgentAction, BasePromptTemplate
 from langchain.schema.language_model import BaseLanguageModel
 
 from sqlbot.agent.prompts import SQL_PREFIX, SQL_SUFFIX, FORMAT_INSTRUCTIONS
@@ -47,6 +47,7 @@ def create_sql_agent(
     early_stopping_method: str = "force",
     verbose: bool = False,
     agent_executor_kwargs: Optional[Dict[str, Any]] = None,
+    memory_prompts: Optional[List[BasePromptTemplate]] = None,
     **kwargs: Dict[str, Any],
 ) -> AgentExecutor:
     """Construct an SQL agent from an LLM and tools."""
@@ -60,6 +61,7 @@ def create_sql_agent(
         suffix=suffix,
         format_instructions=FORMAT_INSTRUCTIONS,
         input_variables=input_variables,
+        memory_prompts=memory_prompts,
     )
     llm_chain = LLMChain(
         llm=llm,

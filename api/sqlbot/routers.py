@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Header, WebSocket, WebSocketDisconnect
 from langchain.llms import HuggingFaceTextGenInference
 from langchain.memory import ConversationBufferWindowMemory
+from langchain.prompts import MessagesPlaceholder
 from langchain.sql_database import SQLDatabase
 from loguru import logger
 
@@ -50,6 +51,9 @@ coder_llm = HuggingFaceTextGenInference(
     typical_p=None,
     stop_sequences=["</s>"],
 )
+
+history_prompt = MessagesPlaceholder(variable_name="history")
+
 db = SQLDatabase.from_uri(settings.warehouse_url, sample_rows_in_table_info=3)
 
 
@@ -159,6 +163,7 @@ async def generate(
                 ai_prefix=AI_PREFIX,
                 memory_key="history",
                 chat_memory=history,
+                return_messages=True,
             )
             agent_executor = create_sql_agent(
                 llm=llm,
@@ -166,6 +171,8 @@ async def generate(
                 top_k=5,
                 verbose=True,
                 max_iterations=10,
+                memory_prompts=[history_prompt],
+                input_variables=["input", "agent_scratchpad", "history"],
                 agent_executor_kwargs={"memory": memory},
             )
 
