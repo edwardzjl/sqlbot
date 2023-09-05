@@ -34,13 +34,20 @@ router = APIRouter(
     tags=["conversation"],
 )
 
+llm = HuggingFaceTextGenInference(
+    inference_server_url=settings.isvc_llm,
+    max_new_tokens=512,
+    temperature=0.1,
+    typical_p=None,
+    stop_sequences=["</s>", "Observation", "Thought"],
+    streaming=True,
+)
 
 coder_llm = HuggingFaceTextGenInference(
     inference_server_url=settings.isvc_coder_llm,
     max_new_tokens=512,
     temperature=0.1,
-    top_p=None,
-    repetition_penalty=1.1,
+    typical_p=None,
     stop_sequences=["</s>"],
 )
 db = SQLDatabase.from_uri(settings.warehouse_url, sample_rows_in_table_info=3)
@@ -124,23 +131,15 @@ async def generate(
             payload: str = await websocket.receive_text()
             message = ChatMessage.parse_raw(payload)
 
-            final_answer_stream_handler = StreamingFinalAnswerCallbackHandler(
+            streaming_thought_callback = StreamingIntermediateThoughtCallbackHandler(
                 websocket, message.conversation
             )
-            thought_stream_handler = StreamingIntermediateThoughtCallbackHandler(
+            streaming_answer_callback = StreamingFinalAnswerCallbackHandler(
                 websocket, message.conversation
             )
-            llm = HuggingFaceTextGenInference(
-                inference_server_url=settings.isvc_llm,
-                max_new_tokens=512,
-                temperature=0.1,
-                top_p=None,
-                repetition_penalty=1.03,
-                stop_sequences=["</s>", "Observation", "Thought"],
-                callbacks=[thought_stream_handler, final_answer_stream_handler],
-                streaming=True,
+            update_conversation_callback = UpdateConversationCallbackHandler(
+                message.conversation
             )
-
             toolkit = SQLBotToolkit(
                 db=db,
                 llm=coder_llm,
@@ -161,22 +160,23 @@ async def generate(
                 memory_key="history",
                 chat_memory=history,
             )
-            update_conversation_callback = UpdateConversationCallbackHandler(
-                message.conversation
-            )
             agent_executor = create_sql_agent(
                 llm=llm,
                 toolkit=toolkit,
                 top_k=5,
                 verbose=True,
                 max_iterations=10,
-                agent_executor_kwargs={
-                    "memory": memory,
-                    "callbacks": [update_conversation_callback],
-                },
+                agent_executor_kwargs={"memory": memory},
             )
 
-            await agent_executor.arun(message.content)
+            await agent_executor.arun(
+                input=message.content,
+                callbacks=[
+                    streaming_thought_callback,
+                    streaming_answer_callback,
+                    update_conversation_callback,
+                ],
+            )
         except WebSocketDisconnect:
             logger.info("websocket disconnected")
             return
