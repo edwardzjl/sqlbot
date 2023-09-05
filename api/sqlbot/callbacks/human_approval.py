@@ -2,6 +2,7 @@ from typing import Any, Callable, Optional
 from uuid import UUID
 
 from fastapi import WebSocket
+import sqlparse
 
 # from langchain.callbacks.human import HumanApprovalCallbackHandler
 
@@ -38,11 +39,14 @@ class WebsocketHumanApprovalCallbackHandler(WebsocketCallbackHandler):
     ) -> None:
         """Run when tool starts running."""
         if self._should_check(serialized):
+            formated_sql = sqlparse.format(
+                input_str, reindent=True, keyword_case="upper"
+            )
             message = ChatMessage(
                 id=run_id,
                 conversation=self.conversation_id,
                 from_="ai",
-                content=f"executing sql:\n```sql\n{input_str}\n```",
+                content=f"executing sql:\n```sql\n{formated_sql}\n```",
                 type="text",
             )
             await self.websocket.send_json(message.dict())
