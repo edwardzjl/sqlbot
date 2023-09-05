@@ -52,11 +52,12 @@ def create_sql_agent(
     """Construct an SQL agent from an LLM and tools."""
     tools = toolkit.get_tools()
     prefix = SQL_PREFIX.format(dialect=toolkit.dialect, top_k=top_k)
+    suffix = SQL_SUFFIX.format(dialect=toolkit.dialect)
 
     prompt = AppendThoughtAgent.create_prompt(
         tools,
         prefix=prefix,
-        suffix=SQL_SUFFIX,
+        suffix=suffix,
         format_instructions=FORMAT_INSTRUCTIONS,
         input_variables=input_variables,
     )

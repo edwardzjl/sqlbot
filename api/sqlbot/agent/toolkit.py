@@ -12,6 +12,7 @@ from sqlbot.tools import (
     CustomListTablesTool,
     FakeAsyncQuerySQLDataBaseTool,
 )
+from sqlbot.tools.prompt import QUERY_CHECKER
 
 
 class SQLBotToolkit(SQLDatabaseToolkit):
@@ -63,7 +64,10 @@ class SQLBotToolkit(SQLDatabaseToolkit):
             f"{query_sql_database_tool.name}!"
         )
         query_sql_checker_tool = QuerySQLCheckerTool(
-            db=self.db, llm=self.llm, description=query_sql_checker_tool_description
+            db=self.db,
+            llm=self.llm,
+            description=query_sql_checker_tool_description,
+            template=QUERY_CHECKER,
         )
         return [
             query_sql_database_tool,
