@@ -9,9 +9,10 @@ from loguru import logger
 
 from sqlbot.agent import create_sql_agent, SQLBotToolkit
 from sqlbot.callbacks import (
-    UpdateConversationCallbackHandler,
-    StreamingIntermediateThoughtCallbackHandler,
     StreamingFinalAnswerCallbackHandler,
+    StreamingIntermediateThoughtCallbackHandler,
+    TracingLLMCallbackHandler,
+    UpdateConversationCallbackHandler,
 )
 from sqlbot.history import AppendSuffixHistory
 from sqlbot.agent.prompts import (
@@ -35,6 +36,7 @@ router = APIRouter(
     tags=["conversation"],
 )
 
+tracing_callback = TracingLLMCallbackHandler()
 llm = HuggingFaceTextGenInference(
     inference_server_url=settings.isvc_llm,
     max_new_tokens=512,
@@ -42,6 +44,7 @@ llm = HuggingFaceTextGenInference(
     typical_p=None,
     stop_sequences=["</s>", "Observation", "Thought"],
     streaming=True,
+    callbacks=[tracing_callback],
 )
 
 coder_llm = HuggingFaceTextGenInference(
@@ -169,7 +172,6 @@ async def generate(
                 llm=llm,
                 toolkit=toolkit,
                 top_k=5,
-                verbose=True,
                 max_iterations=10,
                 memory_prompts=[history_prompt],
                 input_variables=["input", "agent_scratchpad", "history"],
