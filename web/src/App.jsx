@@ -2,8 +2,11 @@ import "./normal.css";
 import "./App.css";
 import { useState, useEffect, useReducer, useRef, forwardRef } from "react";
 
-import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
+import Collapse from "@mui/material/Collapse";
+import IconButton from "@mui/material/IconButton";
+import Snackbar from "@mui/material/Snackbar";
+import CloseIcon from "@mui/icons-material/Close";
 
 import SideMenu from "components/SideMenu";
 import ChatLog from "components/ChatLog";
@@ -25,7 +28,6 @@ const Alert = forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-
 function App() {
   const ws = useRef(null);
   useEffect(() => {
@@ -38,33 +40,43 @@ function App() {
       try {
         const payload = JSON.parse(msg.data);
         switch (payload.type) {
-          case "start":
-            dispatch({
-              type: "messageAdded",
-              id: payload.conversation,
-              message: { from: payload.from, content: payload.content || "" },
-            });
-            break;
-          case "stream":
-            dispatch({
-              type: "messageAppended",
-              id: payload.conversation,
-              message: { from: payload.from, content: payload.content },
-            });
-            break;
-          case "error":
-            setSnackbar({
-              open: true,
-              severity: "error",
-              message: "Something goes wrong, please try again later.",
-            });
-            break;
           case "text":
             dispatch({
               type: "messageAdded",
               id: payload.conversation,
               message: { from: payload.from, content: payload.content },
             });
+            break;
+          case "stream/start":
+            dispatch({
+              type: "messageAdded",
+              id: payload.conversation,
+              message: { from: payload.from, content: payload.content || "" },
+            });
+            break;
+          case "stream/text":
+            dispatch({
+              type: "messageAppended",
+              id: payload.conversation,
+              message: { from: payload.from, content: payload.content },
+            });
+            break;
+          case "thought/start":
+            setThoughtOpen(true);
+            setThoughts("");
+            break;
+          case "thought/text":
+            setThoughts((prevThought) => prevThought + payload.content);
+            break;
+          case "error":
+            setSnackbar({
+              open: true,
+              severity: "error",
+              message: `Something goes wrong, please try again later:\n${payload.content}`,
+            });
+            break;
+          default:
+            console.debug("unknown message type", payload);
             break;
         }
       } catch (error) {
@@ -103,6 +115,9 @@ function App() {
   const [snackbar, setSnackbar] = useState(
     /** @type {{open: boolean, severity: string?, message: string}} */ {}
   );
+
+  const [thoughtOpen, setThoughtOpen] = useState(false);
+  const [thoughts, setThoughts] = useState("");
 
   // initialization
   useEffect(() => {
@@ -180,6 +195,30 @@ function App() {
             <SideMenu />
             <section className="chatbox">
               <ChatLog>
+                <Collapse in={thoughtOpen}>
+                  <MuiAlert
+                    severity="info"
+                    sx={{
+                      maxWidth: "800px",
+                      marginLeft: "auto",
+                      marginRight: "auto",
+                    }}
+                    action={
+                      <IconButton
+                        aria-label="close"
+                        color="inherit"
+                        size="small"
+                        onClick={() => {
+                          setThoughtOpen(false);
+                        }}
+                      >
+                        <CloseIcon fontSize="inherit" />
+                      </IconButton>
+                    }
+                  >
+                    {"Thought: " + thoughts}
+                  </MuiAlert>
+                </Collapse>
                 {currentConv?.messages?.map((message, index) => (
                   <ChatMessage key={index} message={message} />
                 ))}

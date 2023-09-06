@@ -95,7 +95,7 @@ class StreamingFinalAnswerCallbackHandler(WebsocketCallbackHandler):
                 conversation=self.conversation_id,
                 from_="ai",
                 content=None,
-                type="start",
+                type="stream/start",
             )
             await self.websocket.send_json(message.dict())
             return
@@ -107,6 +107,6 @@ class StreamingFinalAnswerCallbackHandler(WebsocketCallbackHandler):
                 conversation=self.conversation_id,
                 from_="ai",
                 content=token,
-                type="stream",
+                type="stream/text",
             )
             await self.websocket.send_json(message.dict())
