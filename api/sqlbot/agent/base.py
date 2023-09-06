@@ -11,7 +11,7 @@ from langchain.chains.llm import LLMChain
 from langchain.schema import AgentAction, BasePromptTemplate
 from langchain.schema.language_model import BaseLanguageModel
 
-from sqlbot.agent.prompts import SQL_PREFIX, SQL_SUFFIX, FORMAT_INSTRUCTIONS
+from sqlbot.agent.prompts import PREFIX, SUFFIX, FORMAT_INSTRUCTIONS
 from sqlbot.agent.toolkit import SQLBotToolkit
 from sqlbot.agent.output_parser import StripFinalAnswerPrefixStructuredChatOutputParser
 
@@ -52,8 +52,8 @@ def create_sql_agent(
 ) -> AgentExecutor:
     """Construct an SQL agent from an LLM and tools."""
     tools = toolkit.get_tools()
-    prefix = SQL_PREFIX.format(dialect=toolkit.dialect, top_k=top_k)
-    suffix = SQL_SUFFIX.format(dialect=toolkit.dialect)
+    prefix = PREFIX.format(dialect=toolkit.dialect, top_k=top_k)
+    suffix = SUFFIX.format(dialect=toolkit.dialect)
 
     prompt = AppendThoughtAgent.create_prompt(
         tools,
