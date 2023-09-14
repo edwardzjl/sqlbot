@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID
 
 from langchain.callbacks.base import AsyncCallbackHandler
@@ -13,11 +13,11 @@ class UpdateConversationCallbackHandler(AsyncCallbackHandler):
 
     async def on_chain_end(
         self,
-        outputs: Dict[str, Any],
+        outputs: dict[str, Any],
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
-        tags: Optional[List[str]] = None,
+        tags: Optional[list[str]] = None,
         **kwargs: Any,
     ) -> None:
         """Run when chain ends running."""

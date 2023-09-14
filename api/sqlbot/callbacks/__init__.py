@@ -1,3 +1,4 @@
+from sqlbot.callbacks.error import LCErrorCallbackHandler
 from sqlbot.callbacks.final_answer import StreamingFinalAnswerCallbackHandler
 from sqlbot.callbacks.human_approval import WebsocketHumanApprovalCallbackHandler
 from sqlbot.callbacks.thought import StreamingIntermediateThoughtCallbackHandler

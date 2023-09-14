@@ -9,6 +9,7 @@ from loguru import logger
 
 from sqlbot.agent import create_sql_agent, SQLBotToolkit
 from sqlbot.callbacks import (
+    LCErrorCallbackHandler,
     StreamingFinalAnswerCallbackHandler,
     StreamingIntermediateThoughtCallbackHandler,
     TracingLLMCallbackHandler,
@@ -147,6 +148,7 @@ async def generate(
             update_conversation_callback = UpdateConversationCallbackHandler(
                 message.conversation
             )
+            error_callback = LCErrorCallbackHandler(websocket, message.conversation)
             toolkit = SQLBotToolkit(
                 db=db,
                 llm=coder_llm,
@@ -184,6 +186,7 @@ async def generate(
                     streaming_thought_callback,
                     streaming_answer_callback,
                     update_conversation_callback,
+                    error_callback,
                 ],
             )
         except WebSocketDisconnect:
