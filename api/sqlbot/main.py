@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 from aredis_om import Migrator, NotFoundError
-from fastapi import FastAPI, Header, status
+from fastapi import FastAPI, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 from sqlbot.routers import router
+from sqlbot.utils import UserIdHeader
 
 
 @asynccontextmanager
@@ -30,8 +31,8 @@ def healthz():
 
 
 @app.get("/api/userinfo")
-def userinfo(kubeflow_userid: Annotated[str | None, Header()] = None):
-    return {"username": kubeflow_userid}
+def userinfo(userid: Annotated[str | None, UserIdHeader()] = None):
+    return {"username": userid}
 
 
 @app.exception_handler(NotFoundError)

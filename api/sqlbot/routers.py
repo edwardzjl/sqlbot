@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Header, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from langchain.llms import HuggingFaceTextGenInference
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.prompts import MessagesPlaceholder
@@ -28,7 +28,7 @@ from sqlbot.schemas import (
     UpdateConversation,
 )
 from sqlbot.config import settings
-from sqlbot.utils import utcnow
+from sqlbot.utils import UserIdHeader, utcnow
 
 
 router = APIRouter(
@@ -61,8 +61,8 @@ db = SQLDatabase.from_uri(settings.warehouse_url, sample_rows_in_table_info=3)
 
 
 @router.get("/conversations", response_model=list[Conversation])
-async def get_conversations(kubeflow_userid: Annotated[str | None, Header()] = None):
-    convs = await Conversation.find(Conversation.owner == kubeflow_userid).all()
+async def get_conversations(userid: Annotated[str | None, UserIdHeader()] = None):
+    convs = await Conversation.find(Conversation.owner == userid).all()
     convs.sort(key=lambda x: x.updated_at, reverse=True)
     return convs
 
@@ -70,14 +70,14 @@ async def get_conversations(kubeflow_userid: Annotated[str | None, Header()] = N
 @router.get("/conversations/{conversation_id}", response_model=ConversationDetail)
 async def get_conversation(
     conversation_id: str,
-    kubeflow_userid: Annotated[str | None, Header()] = None,
+    userid: Annotated[str | None, UserIdHeader()] = None,
 ):
     conv = await Conversation.get(conversation_id)
     history = AppendSuffixHistory(
         url=settings.redis_om_url,
         user_suffix=HUMAN_SUFFIX,
         ai_suffix=AI_SUFFIX,
-        session_id=f"{kubeflow_userid}:{conversation_id}",
+        session_id=f"{userid}:{conversation_id}",
     )
     return ConversationDetail(
         messages=[
@@ -90,7 +90,7 @@ async def get_conversation(
             if message.type == "ai"
             else ChatMessage(
                 conversation=conversation_id,
-                from_=kubeflow_userid,
+                from_=userid,
                 content=message.content,
                 type="text",
             ).dict()
@@ -101,8 +101,8 @@ async def get_conversation(
 
 
 @router.post("/conversations", status_code=201, response_model=ConversationDetail)
-async def create_conversation(kubeflow_userid: Annotated[str | None, Header()] = None):
-    conv = Conversation(title=f"New chat", owner=kubeflow_userid)
+async def create_conversation(userid: Annotated[str | None, UserIdHeader()] = None):
+    conv = Conversation(title=f"New chat", owner=userid)
     await conv.save()
     return conv
 
@@ -111,7 +111,7 @@ async def create_conversation(kubeflow_userid: Annotated[str | None, Header()] =
 async def update_conversation(
     conversation_id: str,
     payload: UpdateConversation,
-    kubeflow_userid: Annotated[str | None, Header()] = None,
+    userid: Annotated[str | None, UserIdHeader()] = None,
 ):
     conv = await Conversation.get(conversation_id)
     conv.title = payload.title
@@ -121,7 +121,7 @@ async def update_conversation(
 
 @router.delete("/conversations/{conversation_id}", status_code=204)
 async def delete_conversation(
-    conversation_id: str, kubeflow_userid: Annotated[str | None, Header()] = None
+    conversation_id: str, userid: Annotated[str | None, UserIdHeader()] = None
 ):
     await Conversation.delete(conversation_id)
 
@@ -129,7 +129,7 @@ async def delete_conversation(
 @router.websocket("/chat")
 async def generate(
     websocket: WebSocket,
-    kubeflow_userid: Annotated[str | None, Header()] = None,
+    userid: Annotated[str | None, UserIdHeader()] = None,
 ):
     await websocket.accept()
 
@@ -159,7 +159,7 @@ async def generate(
                 url=settings.redis_om_url,
                 user_suffix=HUMAN_SUFFIX,
                 ai_suffix=AI_SUFFIX,
-                session_id=f"{kubeflow_userid}:{message.conversation}",
+                session_id=f"{userid}:{message.conversation}",
             )
             memory = ConversationBufferWindowMemory(
                 human_prefix=HUMAN_PREFIX,

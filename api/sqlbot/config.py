@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     warehouse_url: PostgresDsn = (
         "postgresql+psycopg://postgres:postgres@localhost:5432/"
     )
+    user_id_header: str = "kubeflow-userid"
 
 
 settings = Settings()
