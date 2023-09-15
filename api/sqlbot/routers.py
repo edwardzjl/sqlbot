@@ -8,6 +8,12 @@ from langchain.sql_database import SQLDatabase
 from loguru import logger
 
 from sqlbot.agent import create_sql_agent, SQLBotToolkit
+from sqlbot.agent.prompts import (
+    HUMAN_PREFIX,
+    AI_PREFIX,
+    HUMAN_SUFFIX,
+    AI_SUFFIX,
+)
 from sqlbot.callbacks import (
     LCErrorCallbackHandler,
     StreamingFinalAnswerCallbackHandler,
@@ -15,20 +21,14 @@ from sqlbot.callbacks import (
     TracingLLMCallbackHandler,
     UpdateConversationCallbackHandler,
 )
+from sqlbot.config import settings
 from sqlbot.history import AppendSuffixHistory
-from sqlbot.agent.prompts import (
-    HUMAN_PREFIX,
-    AI_PREFIX,
-    HUMAN_SUFFIX,
-    AI_SUFFIX,
-)
 from sqlbot.schemas import (
     ChatMessage,
     ConversationDetail,
     Conversation,
     UpdateConversation,
 )
-from sqlbot.config import settings
 from sqlbot.utils import UserIdHeader, utcnow
 
 
