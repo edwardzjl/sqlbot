@@ -70,7 +70,7 @@ class StreamingIntermediateThoughtCallbackHandler(WebsocketCallbackHandler):
             conversation=self.conversation_id,
             from_="ai",
             content=None,
-            type="start",
+            type="thought/start",
         )
         await self.websocket.send_json(message.dict())
 
@@ -96,14 +96,30 @@ class StreamingIntermediateThoughtCallbackHandler(WebsocketCallbackHandler):
                     conversation=self.conversation_id,
                     from_="ai",
                     content=t,
-                    type="stream",
+                    type="thought/text",
                 )
                 await self.websocket.send_json(message.dict())
+            message = ChatMessage(
+                id=run_id,
+                conversation=self.conversation_id,
+                from_="ai",
+                content=None,
+                type="thought/end",
+            )
+            await self.websocket.send_json(message.dict())
             return
 
         self.append_to_last_tokens(token)
         if self.answer_reached():
             self.thinking = False
+            message = ChatMessage(
+                id=run_id,
+                conversation=self.conversation_id,
+                from_="ai",
+                content=None,
+                type="thought/end",
+            )
+            await self.websocket.send_json(message.dict())
             return
 
         if "" in self.last_tokens:
@@ -116,6 +132,6 @@ class StreamingIntermediateThoughtCallbackHandler(WebsocketCallbackHandler):
             conversation=self.conversation_id,
             from_="ai",
             content=self.last_tokens[0],
-            type="stream",
+            type="thought/text",
         )
         await self.websocket.send_json(message.dict())
