@@ -1,6 +1,7 @@
 from typing import Any, Optional
 from uuid import UUID
 
+from langchain.schema.agent import AgentFinish
 from langchain.callbacks.base import AsyncCallbackHandler
 
 from sqlbot.schemas import Conversation
@@ -11,16 +12,16 @@ class UpdateConversationCallbackHandler(AsyncCallbackHandler):
     def __init__(self, conversation_id: str):
         self.conversation_id: str = conversation_id
 
-    async def on_chain_end(
+    async def on_agent_finish(
         self,
-        outputs: dict[str, Any],
+        finish: AgentFinish,
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
         tags: Optional[list[str]] = None,
         **kwargs: Any,
     ) -> None:
-        """Run when chain ends running."""
+        """Run on agent end."""
         conv = await Conversation.get(self.conversation_id)
         conv.updated_at = utcnow()
         await conv.save()
