@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from langchain.llms import HuggingFaceTextGenInference
@@ -16,6 +17,7 @@ from sqlbot.agent.prompts import (
 )
 from sqlbot.callbacks import (
     LCErrorCallbackHandler,
+    PersistHistoryCallbackHandler,
     StreamingFinalAnswerCallbackHandler,
     StreamingIntermediateThoughtCallbackHandler,
     TracingLLMCallbackHandler,
@@ -30,6 +32,7 @@ from sqlbot.schemas import (
     Conversation,
     UpdateConversation,
 )
+from sqlbot.steps import IntermediateStepsStore
 from sqlbot.utils import UserIdHeader, utcnow
 
 
@@ -61,6 +64,11 @@ history_prompt = MessagesPlaceholder(variable_name="history")
 
 db = SQLDatabase.from_uri(settings.warehouse_url, sample_rows_in_table_info=3)
 
+# We need to deconstruct it in app, so it must not be in the router functions
+steps_store = IntermediateStepsStore(
+    redis_url=settings.redis_om_url, key_prefix="sqlbot:steps"
+)
+
 
 @router.get("/conversations", response_model=list[Conversation])
 async def get_conversations(userid: Annotated[str | None, UserIdHeader()] = None):
@@ -84,6 +92,7 @@ async def get_conversation(
     return ConversationDetail(
         messages=[
             ChatMessage(
+                id=UUID(message.additional_kwargs["id"]),
                 conversation=conversation_id,
                 from_="ai",
                 content=message.content,
@@ -91,6 +100,7 @@ async def get_conversation(
             )
             if message.type == "ai"
             else ChatMessage(
+                id=UUID(message.additional_kwargs["id"]),
                 conversation=conversation_id,
                 from_=userid,
                 content=message.content,
@@ -158,6 +168,7 @@ async def generate(
             human_approval_callback = WebsocketHumanApprovalCallbackHandler(
                 websocket, message.conversation, should_check=_require_approve
             )
+
             toolkit = SQLBotToolkit(
                 db=db,
                 llm=coder_llm,
@@ -177,7 +188,20 @@ async def generate(
                 memory_key="history",
                 chat_memory=history,
                 return_messages=True,
+                input_key="input",
+                output_key="output",
             )
+
+            steps_store.key_prefix = f"sqlbot:steps:{userid}:{message.conversation}"
+
+            def _should_persist(tags: list) -> bool:
+                # Only require approval on sql_db_query.
+                return tags is not None and "agent_executor_chain" in tags
+
+            history_callback = PersistHistoryCallbackHandler(
+                memory=memory, steps_store=steps_store, should_persist=_should_persist
+            )
+
             agent_executor = create_sql_agent(
                 llm=llm,
                 toolkit=toolkit,
@@ -185,17 +209,22 @@ async def generate(
                 max_iterations=10,
                 memory_prompts=[history_prompt],
                 input_variables=["input", "agent_scratchpad", "history"],
-                agent_executor_kwargs={"memory": memory},
+                agent_executor_kwargs={
+                    "memory": memory,
+                    "return_intermediate_steps": True,
+                    "tags": ["agent_executor_chain"],
+                },
             )
 
-            await agent_executor.arun(
-                input=message.content,
+            await agent_executor.acall(
+                message.content,
                 callbacks=[
                     streaming_thought_callback,
                     streaming_answer_callback,
                     update_conversation_callback,
                     error_callback,
                     human_approval_callback,
+                    history_callback,
                 ],
             )
         except WebSocketDisconnect:
@@ -203,3 +232,16 @@ async def generate(
             return
         except Exception as e:
             logger.error(f"Something goes wrong, err: {e}")
+
+
+# Cannot marshall response as response_model=list[tuple[AgentAction, Any]], don't know why
+@router.get(
+    "/conversations/{conversation_id}/messages/{message_id}/steps",
+)
+async def get_intermediate_steps(
+    conversation_id: str,
+    message_id: str,
+    userid: Annotated[str | None, UserIdHeader()] = None,
+):
+    steps_store.key_prefix = f"sqlbot:steps:{userid}:{conversation_id}"
+    return await steps_store.get(message_id)

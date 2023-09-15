@@ -36,6 +36,23 @@ class AppendThoughtAgent(StructuredChatAgent):
             return self.llm_prefix
 
 
+class CustomAgentExecutor(AgentExecutor):
+    def prep_outputs(
+        self,
+        inputs: Dict[str, str],
+        outputs: Dict[str, str],
+        return_only_outputs: bool = False,
+    ) -> Dict[str, str]:
+        """disable persist history"""
+        self._validate_outputs(outputs)
+        # if self.memory is not None:
+        # self.memory.save_context(inputs, outputs)
+        if return_only_outputs:
+            return outputs
+        else:
+            return {**inputs, **outputs}
+
+
 def create_sql_agent(
     llm: BaseLanguageModel,
     toolkit: SQLBotToolkit,
@@ -79,7 +96,7 @@ def create_sql_agent(
         **kwargs,
     )
 
-    return AgentExecutor.from_agent_and_tools(
+    return CustomAgentExecutor.from_agent_and_tools(
         agent=agent,
         tools=tools,
         callback_manager=callback_manager,

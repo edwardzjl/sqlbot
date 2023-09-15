@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
-from sqlbot.routers import router
+from sqlbot.routers import router, steps_store
 from sqlbot.utils import UserIdHeader
 
 
@@ -18,6 +18,7 @@ from sqlbot.utils import UserIdHeader
 async def lifespan(app: FastAPI):
     await Migrator().run()
     yield
+    await steps_store.close()
 
 
 app = FastAPI(lifespan=lifespan)
