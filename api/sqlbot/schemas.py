@@ -30,10 +30,12 @@ class ChatMessage(BaseModel):
         return v
 
     @staticmethod
-    def from_lc(lc_message: BaseMessage) -> "ChatMessage":
+    def from_lc(lc_message: BaseMessage, conv_id: str) -> "ChatMessage":
         return ChatMessage(
+            conversation=conv_id,
             from_=lc_message.type,
             content=lc_message.content,
+            type="text",
         )
 
     _encoders_by_type = {
@@ -74,7 +76,7 @@ class Conversation(JsonModel):
 class ConversationDetail(Conversation):
     """Conversation with messages."""
 
-    messages: list[dict[str, str]] = []
+    messages: list[ChatMessage] = []
 
 
 class UpdateConversation(BaseModel):
