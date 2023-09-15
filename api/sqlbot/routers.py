@@ -20,6 +20,7 @@ from sqlbot.callbacks import (
     StreamingIntermediateThoughtCallbackHandler,
     TracingLLMCallbackHandler,
     UpdateConversationCallbackHandler,
+    WebsocketHumanApprovalCallbackHandler,
 )
 from sqlbot.config import settings
 from sqlbot.history import AppendSuffixHistory
@@ -149,11 +150,18 @@ async def generate(
                 message.conversation
             )
             error_callback = LCErrorCallbackHandler(websocket, message.conversation)
+
+            def _require_approve(serialized_obj: dict) -> bool:
+                # Only require approval on sql_db_query.
+                return serialized_obj.get("name") == "sql_db_query"
+
+            human_approval_callback = WebsocketHumanApprovalCallbackHandler(
+                websocket, message.conversation, should_check=_require_approve
+            )
             toolkit = SQLBotToolkit(
                 db=db,
                 llm=coder_llm,
                 redis_url=settings.redis_om_url,
-                websocket=websocket,
                 conversation_id=message.conversation,
             )
 
@@ -187,6 +195,7 @@ async def generate(
                     streaming_answer_callback,
                     update_conversation_callback,
                     error_callback,
+                    human_approval_callback,
                 ],
             )
         except WebSocketDisconnect:
