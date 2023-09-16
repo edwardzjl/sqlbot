@@ -3,16 +3,14 @@ import "./App.css";
 import { useState, useEffect, useReducer, useRef, forwardRef } from "react";
 
 import MuiAlert from "@mui/material/Alert";
-import Collapse from "@mui/material/Collapse";
-import IconButton from "@mui/material/IconButton";
 import Snackbar from "@mui/material/Snackbar";
-import CloseIcon from "@mui/icons-material/Close";
 
 import SideMenu from "components/SideMenu";
 import ChatLog from "components/ChatLog";
 import ChatMessage from "components/ChatLog/ChatMessage";
 import ChatInput from "components/ChatLog/ChatInput";
 import StepsDialog from "components/ChatLog/Steps";
+import Thought from "components/ChatLog/Thought";
 import generateName from "names";
 import {
   createConversation,
@@ -207,30 +205,7 @@ function App() {
           <ConversationContext.Provider value={{ conversations, dispatch }}>
             <SideMenu />
             <section className="chatbox">
-              <Collapse in={thoughtOpen}>
-                <MuiAlert
-                  severity="info"
-                  sx={{
-                    maxWidth: "800px",
-                    marginLeft: "auto",
-                    marginRight: "auto",
-                  }}
-                  action={
-                    <IconButton
-                      aria-label="close"
-                      color="inherit"
-                      size="small"
-                      onClick={() => {
-                        setThoughtOpen(false);
-                      }}
-                    >
-                      <CloseIcon fontSize="inherit" />
-                    </IconButton>
-                  }
-                >
-                  {"Thought: " + thoughts}
-                </MuiAlert>
-              </Collapse>
+              <Thought open={thoughtOpen} onClose={() => setThoughtOpen(false)} content={thoughts} />
               <StepsDialog steps={steps} open={stepsDialogOpen} onClose={() => setStepsDialogOpen(false)} />
               <ChatLog>
                 {currentConv?.messages?.map((message, index) => (
