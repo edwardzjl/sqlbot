@@ -24,11 +24,11 @@
     overflow-wrap: break-word;
 }
 
-.chat-message-content-copy {
+.show-steps-icon {
     margin-left: auto;
 }
 
-.chat-message-content-copy:hover {
+.show-steps-icon:hover {
     opacity: 0.9;
     transition: opacity 1s;
 }
@@ -36,7 +36,7 @@
 /* Only using :not(:hover) will the fadeout take effect
  * Otherwise the button just disappear immediately
  */
-.chat-message-content-copy:not(:hover) {
-    opacity: 0.1;
+.show-steps-icon:not(:hover) {
+    opacity: 0.3;
     transition: opacity 1s;
 }

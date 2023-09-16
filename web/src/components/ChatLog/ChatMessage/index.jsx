@@ -1,6 +1,5 @@
 import "./index.css";
 
-import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import remarkGfm from "remark-gfm";
@@ -8,9 +7,19 @@ import { darcula } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 import Avatar from "@mui/material/Avatar";
 import Tooltip from "@mui/material/Tooltip";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 
 import { getFirstLetters, stringToColor } from "commons";
+
+
+/**
+ * Checks whether a message is sent by bot.
+ * @param {*} message
+ */
+const botMessage = (message) => {
+  const msgFrom = message.from.toLowerCase();
+  return msgFrom === "ai" || msgFrom === "assistant";
+};
 
 /**
  *
@@ -22,27 +31,9 @@ import { getFirstLetters, stringToColor } from "commons";
  * @returns
  */
 const ChatMessage = (props) => {
-  const [copyTooltipTitle, setCopyTooltipTitle] = useState("copy content");
-
-  const handleMouseIn = () => {
-    setCopyTooltipTitle("copy content");
-  };
-
-  /**
-   * Checks whether a message is sent by bot.
-   * @param {*} message
-   */
-  const botMessage = (message) => {
-    const msgFrom = message.from.toLowerCase();
-    return msgFrom === "ai" || msgFrom === "assistant";
-  };
-
   return (
     <div className={`chat-message ${botMessage(props.message) && "AI"}`}>
-      <div
-        className="chat-message-center"
-        onMouseEnter={handleMouseIn}
-      >
+      <div className="chat-message-center">
         <Avatar
           className="chat-message-avatar"
           // Cannot handle string to color in css
@@ -78,9 +69,9 @@ const ChatMessage = (props) => {
           }}
         />
         {botMessage(props.message) && (
-          <Tooltip title={copyTooltipTitle}>
-            <ContentCopyIcon
-              className="chat-message-content-copy"
+          <Tooltip title="show intermediate steps">
+            <VisibilityOutlinedIcon
+              className="show-steps-icon"
               onClick={props.onStepsClick}
             />
           </Tooltip>
