@@ -57,3 +57,8 @@ export const updateConversation = async (conversationId, title) => {
         }),
     })
 };
+
+export const getSteps = async (conversationId, messageId) => {
+    return fetch(`/api/conversations/${conversationId}/messages/${messageId}/steps`, {
+    }).then((res) => res.json());
+};

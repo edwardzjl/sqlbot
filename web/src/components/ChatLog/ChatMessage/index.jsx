@@ -18,6 +18,7 @@ import { getFirstLetters, stringToColor } from "commons";
  * @param {object} props.message
  * @param {string} props.message.from
  * @param {string} props.message.content
+ * @param {string} props.onStepsClick
  * @returns
  */
 const ChatMessage = (props) => {
@@ -25,11 +26,6 @@ const ChatMessage = (props) => {
 
   const handleMouseIn = () => {
     setCopyTooltipTitle("copy content");
-  };
-
-  const onCopyClick = () => {
-    navigator.clipboard.writeText(props.message.content);
-    setCopyTooltipTitle("copied!");
   };
 
   /**
@@ -85,7 +81,7 @@ const ChatMessage = (props) => {
           <Tooltip title={copyTooltipTitle}>
             <ContentCopyIcon
               className="chat-message-content-copy"
-              onClick={onCopyClick}
+              onClick={props.onStepsClick}
             />
           </Tooltip>
         )}

@@ -12,11 +12,13 @@ import SideMenu from "components/SideMenu";
 import ChatLog from "components/ChatLog";
 import ChatMessage from "components/ChatLog/ChatMessage";
 import ChatInput from "components/ChatLog/ChatInput";
+import StepsDialog from "components/ChatLog/Steps";
 import generateName from "names";
 import {
   createConversation,
   getConversations,
   getConversation,
+  getSteps,
 } from "requests";
 import { UserContext, ConversationContext, SnackbarContext } from "contexts";
 import {
@@ -119,6 +121,17 @@ function App() {
   const [thoughtOpen, setThoughtOpen] = useState(false);
   const [thoughts, setThoughts] = useState("");
 
+  const [steps, setSteps] = useState([]);
+  const [stepsDialogOpen, setStepsDialogOpen] = useState(false);
+
+  const onStepsClick = async (conversationId, messageId) => {
+    getSteps(conversationId, messageId).then((steps) => {
+      console.log(steps);
+      setSteps(steps);
+    });
+    setStepsDialogOpen(true);
+  };
+
   // initialization
   useEffect(() => {
     const initialization = async () => {
@@ -218,9 +231,10 @@ function App() {
                   {"Thought: " + thoughts}
                 </MuiAlert>
               </Collapse>
+              <StepsDialog steps={steps} open={stepsDialogOpen} onClose={() => setStepsDialogOpen(false)} />
               <ChatLog>
                 {currentConv?.messages?.map((message, index) => (
-                  <ChatMessage key={index} message={message} />
+                  <ChatMessage key={index} message={message} onStepsClick={() => onStepsClick(currentConv.id, message.id)} />
                 ))}
               </ChatLog>
               <ChatInput chatId={currentConv?.id} onSend={sendMessage} />
