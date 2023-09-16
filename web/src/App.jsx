@@ -166,7 +166,7 @@ function App() {
 
     initialization();
 
-    return () => {};
+    return () => { };
   }, []);
 
   const sendMessage = async (convId, message) => {
@@ -194,31 +194,31 @@ function App() {
           <ConversationContext.Provider value={{ conversations, dispatch }}>
             <SideMenu />
             <section className="chatbox">
+              <Collapse in={thoughtOpen}>
+                <MuiAlert
+                  severity="info"
+                  sx={{
+                    maxWidth: "800px",
+                    marginLeft: "auto",
+                    marginRight: "auto",
+                  }}
+                  action={
+                    <IconButton
+                      aria-label="close"
+                      color="inherit"
+                      size="small"
+                      onClick={() => {
+                        setThoughtOpen(false);
+                      }}
+                    >
+                      <CloseIcon fontSize="inherit" />
+                    </IconButton>
+                  }
+                >
+                  {"Thought: " + thoughts}
+                </MuiAlert>
+              </Collapse>
               <ChatLog>
-                <Collapse in={thoughtOpen}>
-                  <MuiAlert
-                    severity="info"
-                    sx={{
-                      maxWidth: "800px",
-                      marginLeft: "auto",
-                      marginRight: "auto",
-                    }}
-                    action={
-                      <IconButton
-                        aria-label="close"
-                        color="inherit"
-                        size="small"
-                        onClick={() => {
-                          setThoughtOpen(false);
-                        }}
-                      >
-                        <CloseIcon fontSize="inherit" />
-                      </IconButton>
-                    }
-                  >
-                    {"Thought: " + thoughts}
-                  </MuiAlert>
-                </Collapse>
                 {currentConv?.messages?.map((message, index) => (
                   <ChatMessage key={index} message={message} />
                 ))}
