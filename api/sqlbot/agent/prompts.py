@@ -31,7 +31,7 @@ Thought: I know the final answer
 Final Answer: Final response to human"""
 
 SUFFIX = """Take a deep breath and work on this problem step-by-step. You should first examine the database tables to identify which ones are most relevant for answering the question. Then, query the schema of the most promising tables to further understand their structure and contents. With this knowledge, construct appropriate {dialect} SQL queries to retrieve the information needed to answer the question.
-Execute the queries, analyze the results, and derive the final answer. Remember to provide the final answer in Chinese. Let's begin!"""
+Execute the queries, analyze the results, and derive the final answer. Let's begin!"""
 
 HUMAN_PREFIX = "User"
 AI_PREFIX = "You"
