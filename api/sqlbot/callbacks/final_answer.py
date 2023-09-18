@@ -2,6 +2,8 @@ from typing import Any, Optional
 from uuid import UUID
 
 from fastapi import WebSocket
+from langchain.schema import AgentFinish
+from langchain.schema.output import LLMResult
 
 from sqlbot.callbacks.base import WebsocketCallbackHandler
 from sqlbot.schemas import ChatMessage
@@ -110,3 +112,43 @@ class StreamingFinalAnswerCallbackHandler(WebsocketCallbackHandler):
             )
             await self.websocket.send_json(message.dict())
             return
+
+    async def on_llm_end(
+        self,
+        response: LLMResult,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        **kwargs: Any,
+    ) -> None:
+        """Run when LLM ends running."""
+        message = ChatMessage(
+            id=run_id,
+            conversation=self.conversation_id,
+            from_="ai",
+            content=None,
+            type="stream/end",
+        )
+        await self.websocket.send_json(message.dict())
+
+    async def on_agent_finish(
+        self,
+        finish: AgentFinish,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        **kwargs: Any,
+    ) -> None:
+        """Run on agent end."""
+        reason = finish.return_values.get("reason", None)
+        if reason == "early_stopped":
+            message = ChatMessage(
+                id=run_id,
+                conversation=self.conversation_id,
+                from_="ai",
+                content=finish.return_values.get("output", None),
+                type="text",
+            )
+            await self.websocket.send_json(message.dict())
