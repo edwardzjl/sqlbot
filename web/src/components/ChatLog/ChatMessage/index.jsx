@@ -68,7 +68,7 @@ const ChatMessage = (props) => {
             },
           }}
         />
-        {botMessage(props.message) && (
+        {props.message.intermediate_steps && (
           <Tooltip title="show intermediate steps">
             <VisibilityOutlinedIcon
               className="show-steps-icon"

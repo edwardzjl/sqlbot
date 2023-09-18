@@ -16,7 +16,6 @@ import {
   createConversation,
   getConversations,
   getConversation,
-  getSteps,
 } from "requests";
 import { UserContext, ConversationContext, SnackbarContext } from "contexts";
 import {
@@ -44,21 +43,21 @@ function App() {
             dispatch({
               type: "messageAdded",
               id: payload.conversation,
-              message: { from: payload.from, content: payload.content },
+              message: { id: payload.id, from: payload.from, content: payload.content, intermediate_steps: payload.intermediate_steps },
             });
             break;
           case "stream/start":
             dispatch({
               type: "messageAdded",
               id: payload.conversation,
-              message: { from: payload.from, content: payload.content || "" },
+              message: { id: payload.id, from: payload.from, content: payload.content || "" },
             });
             break;
           case "stream/text":
             dispatch({
               type: "messageAppended",
               id: payload.conversation,
-              message: { from: payload.from, content: payload.content },
+              message: { id: payload.id, from: payload.from, content: payload.content },
             });
             break;
           case "thought/start":
@@ -122,11 +121,8 @@ function App() {
   const [steps, setSteps] = useState([]);
   const [stepsDialogOpen, setStepsDialogOpen] = useState(false);
 
-  const onStepsClick = async (conversationId, messageId) => {
-    getSteps(conversationId, messageId).then((steps) => {
-      console.log(steps);
-      setSteps(steps);
-    });
+  const onStepsClick = async (message) => {
+    setSteps(message.intermediate_steps);
     setStepsDialogOpen(true);
   };
 
@@ -209,7 +205,7 @@ function App() {
               <StepsDialog steps={steps} open={stepsDialogOpen} onClose={() => setStepsDialogOpen(false)} />
               <ChatLog>
                 {currentConv?.messages?.map((message, index) => (
-                  <ChatMessage key={index} message={message} onStepsClick={() => onStepsClick(currentConv.id, message.id)} />
+                  <ChatMessage key={index} message={message} onStepsClick={() => onStepsClick(message)} />
                 ))}
               </ChatLog>
               <ChatInput chatId={currentConv?.id} onSend={sendMessage} />

@@ -5,7 +5,7 @@ from langchain.callbacks.base import AsyncCallbackHandler
 from langchain.memory.chat_memory import BaseChatMemory
 from langchain.schema import HumanMessage, AIMessage
 
-from sqlbot.steps import IntermediateStepsStore
+from sqlbot.schemas import IntermediateSteps
 from sqlbot.utils import utcnow, _default_true
 
 
@@ -18,11 +18,9 @@ class PersistHistoryCallbackHandler(AsyncCallbackHandler):
     def __init__(
         self,
         memory: BaseChatMemory,
-        steps_store: IntermediateStepsStore,
         should_persist: Callable[[dict[str, Any]], bool] = _default_true,
     ):
         self.memory = memory
-        self.steps_store = steps_store
         self.should_persist = should_persist
 
     async def on_chain_start(
@@ -55,13 +53,15 @@ class PersistHistoryCallbackHandler(AsyncCallbackHandler):
     ) -> None:
         """Run when chain ends running."""
         if self.should_persist(tags):
+            additional_kwargs = {"id": run_id.hex, "sent_at": utcnow().isoformat()}
+            if "intermediate_steps" in outputs:
+                wrap = IntermediateSteps(__root__=outputs["intermediate_steps"])
+                additional_kwargs["intermediate_steps"] = wrap.json()
             msg = AIMessage(
                 content=outputs[self.memory.output_key],
-                additional_kwargs={"id": run_id.hex, "sent_at": utcnow().isoformat()},
+                additional_kwargs=additional_kwargs,
             )
             self.memory.chat_memory.add_message(msg)
-            if "intermediate_steps" in outputs:
-                await self.steps_store.set(run_id.hex, outputs["intermediate_steps"])
 
     async def on_chain_error(
         self,
