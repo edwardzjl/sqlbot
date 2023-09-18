@@ -8,10 +8,7 @@ import sqlparse
 
 from sqlbot.callbacks.base import WebsocketCallbackHandler
 from sqlbot.schemas import ChatMessage
-
-
-def _default_true(_: dict[str, Any]) -> bool:
-    return True
+from sqlbot.utils import _default_true
 
 
 class WebsocketHumanApprovalCallbackHandler(WebsocketCallbackHandler):
