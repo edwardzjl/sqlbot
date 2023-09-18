@@ -4,13 +4,13 @@ Use only the provided tools for executing queries and accessing the database. Co
 DO NOT make any DML statements (INSERT, UPDATE, DELETE, DROP, etc) to the database.
 If the question does not seem related to the database contents, simply return "I don't know" as the answer."""
 
-FORMAT_INSTRUCTIONS = """Use a JSON blob to specify a tool by providing an "action" key (tool name) and an "action_input" key (tool input).
+FORMAT_INSTRUCTIONS = """Use a Markdown JSON snippet to specify a tool by providing an "action" key (tool name) and an "action_input" key (tool input).
 
 Valid "action" values are: any of the {tool_names}.
 
 Provide only ONE action per $JSON_BLOB, formatted like:
 
-```
+```json
 {{{{
   "action": $TOOL_NAME,
   "action_input": $INPUT
@@ -19,7 +19,7 @@ Provide only ONE action per $JSON_BLOB, formatted like:
 
 Follow this format:
 
-Human: input question to answer
+User: input question to answer
 Thought: consider the origin question, previous steps and subsequent steps
 Action:
 ```
@@ -28,7 +28,7 @@ $JSON_BLOB
 Observation: action result
 ... (repeat Thought/Action/Observation N times)
 Thought: I know the final answer
-Final Answer: Final response to human"""
+Final Answer: Final response to user"""
 
 SUFFIX = """Take a deep breath and work on this problem step-by-step. You should first examine the database tables to identify which ones are most relevant for answering the question. Then, query the schema of the most promising tables to further understand their structure and contents. With this knowledge, construct appropriate {dialect} SQL queries to retrieve the information needed to answer the question.
 Execute the queries, analyze the results, and derive the final answer. Let's begin!"""
