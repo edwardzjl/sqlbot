@@ -93,6 +93,17 @@ export const conversationsReducer = (conversations, action) => {
                 }
             });
         }
+        case "stepsAdded": {
+            return conversations.map((c) => {
+                if (c.id !== action.id) {
+                    return c;
+                }
+                return {
+                    ...c,
+                    messages: c.messages.map((msg) => msg.id === action.message.id ? { ...msg, intermediate_steps: action.message.content } : msg)
+                };
+            });
+        }
         default: {
             throw Error("Unknown action: " + action.type);
         }
