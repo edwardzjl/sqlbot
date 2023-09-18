@@ -1,3 +1,4 @@
+import json
 from typing import Any, Optional
 
 from langchain.callbacks.manager import CallbackManagerForToolRun
@@ -43,7 +44,7 @@ class CustomListTablesTool(ListSQLDatabaseTool):
             table_name = key.removeprefix(self.key_prefix)
             if table_name in usable_tables:
                 res[table_name] = self.client.get(key)
-        return res
+        return json.dumps(res)
 
     async def _arun(
         self,
