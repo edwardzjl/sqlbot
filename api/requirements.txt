@@ -1,5 +1,5 @@
 fastapi==0.103.1
-langchain==0.0.286
+langchain==0.0.293
 loguru==0.7.2
 psycopg[c]==3.1.10
 redis[hiredis]==4.6.0
