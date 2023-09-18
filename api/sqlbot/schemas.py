@@ -3,10 +3,16 @@ from typing import Any, Optional
 from uuid import UUID, uuid4
 
 from aredis_om import JsonModel, Field
-from langchain.schema import BaseMessage
+from langchain.schema import AgentAction, BaseMessage
 from pydantic import BaseModel, root_validator
 
 from sqlbot.utils import utcnow
+
+
+class IntermediateSteps(BaseModel):
+    """Used to serialize list of pydantic models."""
+
+    __root__: list[tuple[AgentAction, Any]]
 
 
 class ChatMessage(BaseModel):
@@ -18,17 +24,31 @@ class ChatMessage(BaseModel):
     """A transient field to determine conversation id."""
     content: Optional[str]
     type: str
+    intermediate_steps: Optional[list[tuple[AgentAction, Any]]] = None
     # sent_at is not an important information for the user, as far as I can tell.
     # But it introduces some complexity in the code, so I'm removing it for now.
     # sent_at: datetime = Field(default_factory=datetime.now)
 
+    @root_validator(pre=True)
+    def deser_steps(cls, values):
+        if "intermediate_steps" in values and values["intermediate_steps"] is not None:
+            values["intermediate_steps"] = IntermediateSteps.parse_raw(
+                values["intermediate_steps"]
+            ).__root__
+        return values
+
     @staticmethod
-    def from_lc(lc_message: BaseMessage, conv_id: str) -> "ChatMessage":
+    def from_lc(lc_message: BaseMessage, conv_id: str, from_: str) -> "ChatMessage":
+        msg_id_str = lc_message.additional_kwargs.get("id", None)
+        msg_id = UUID(msg_id_str) if msg_id_str else uuid4()
+        steps_str = lc_message.additional_kwargs.get("intermediate_steps", None)
         return ChatMessage(
+            id=msg_id,
             conversation=conv_id,
-            from_=lc_message.type,
+            from_=from_,
             content=lc_message.content,
             type="text",
+            intermediate_steps=steps_str,
         )
 
     _encoders_by_type = {

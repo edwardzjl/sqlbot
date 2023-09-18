@@ -1,5 +1,4 @@
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from langchain.llms import HuggingFaceTextGenInference
@@ -32,7 +31,6 @@ from sqlbot.schemas import (
     Conversation,
     UpdateConversation,
 )
-from sqlbot.steps import IntermediateStepsStore
 from sqlbot.utils import UserIdHeader, utcnow
 
 
@@ -64,11 +62,6 @@ history_prompt = MessagesPlaceholder(variable_name="history")
 
 db = SQLDatabase.from_uri(settings.warehouse_url, sample_rows_in_table_info=3)
 
-# We need to deconstruct it in app, so it must not be in the router functions
-steps_store = IntermediateStepsStore(
-    redis_url=settings.redis_om_url, key_prefix="sqlbot:steps"
-)
-
 
 @router.get("/conversations", response_model=list[Conversation])
 async def get_conversations(userid: Annotated[str | None, UserIdHeader()] = None):
@@ -77,7 +70,8 @@ async def get_conversations(userid: Annotated[str | None, UserIdHeader()] = None
     return convs
 
 
-@router.get("/conversations/{conversation_id}", response_model=ConversationDetail)
+# Cannot marshall response as response_model=list[tuple[AgentAction, Any]], don't know why
+@router.get("/conversations/{conversation_id}")
 async def get_conversation(
     conversation_id: str,
     userid: Annotated[str | None, UserIdHeader()] = None,
@@ -91,20 +85,10 @@ async def get_conversation(
     )
     return ConversationDetail(
         messages=[
-            ChatMessage(
-                id=UUID(message.additional_kwargs["id"]),
-                conversation=conversation_id,
-                from_="ai",
-                content=message.content,
-                type="text",
-            )
+            ChatMessage.from_lc(lc_message=message, conv_id=conversation_id, from_="ai")
             if message.type == "ai"
-            else ChatMessage(
-                id=UUID(message.additional_kwargs["id"]),
-                conversation=conversation_id,
-                from_=userid,
-                content=message.content,
-                type="text",
+            else ChatMessage.from_lc(
+                lc_message=message, conv_id=conversation_id, from_=userid
             )
             for message in history.messages
         ],
@@ -192,14 +176,12 @@ async def generate(
                 output_key="output",
             )
 
-            steps_store.key_prefix = f"sqlbot:steps:{userid}:{message.conversation}"
-
             def _should_persist(tags: list) -> bool:
                 # Only require approval on sql_db_query.
                 return tags is not None and "agent_executor_chain" in tags
 
             history_callback = PersistHistoryCallbackHandler(
-                memory=memory, steps_store=steps_store, should_persist=_should_persist
+                memory=memory, should_persist=_should_persist
             )
 
             agent_executor = create_sql_agent(
@@ -232,16 +214,3 @@ async def generate(
             return
         except Exception as e:
             logger.error(f"Something goes wrong, err: {e}")
-
-
-# Cannot marshall response as response_model=list[tuple[AgentAction, Any]], don't know why
-@router.get(
-    "/conversations/{conversation_id}/messages/{message_id}/steps",
-)
-async def get_intermediate_steps(
-    conversation_id: str,
-    message_id: str,
-    userid: Annotated[str | None, UserIdHeader()] = None,
-):
-    steps_store.key_prefix = f"sqlbot:steps:{userid}:{conversation_id}"
-    return await steps_store.get(message_id)
