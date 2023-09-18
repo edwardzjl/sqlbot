@@ -83,6 +83,17 @@ class StreamingFinalAnswerCallbackHandler(WebsocketCallbackHandler):
         **kwargs: Any,
     ) -> None:
         """Run on new LLM token. Only available when streaming is enabled."""
+        # ... if yes, then print tokens from now on
+        if self.answer_reached:
+            message = ChatMessage(
+                id=run_id,
+                conversation=self.conversation_id,
+                from_="ai",
+                content=token,
+                type="stream/text",
+            )
+            await self.websocket.send_json(message.dict())
+            return
 
         # Remember the last n tokens, where n = len(answer_prefix_tokens)
         self.append_to_last_tokens(token)
@@ -99,14 +110,3 @@ class StreamingFinalAnswerCallbackHandler(WebsocketCallbackHandler):
             )
             await self.websocket.send_json(message.dict())
             return
-
-        # ... if yes, then print tokens from now on
-        if self.answer_reached:
-            message = ChatMessage(
-                id=run_id,
-                conversation=self.conversation_id,
-                from_="ai",
-                content=token,
-                type="stream/text",
-            )
-            await self.websocket.send_json(message.dict())
