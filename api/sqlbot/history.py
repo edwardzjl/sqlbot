@@ -36,7 +36,9 @@ class AppendSuffixHistory(RedisChatMessageHistory):
 
     def remove_message_suffix(self, message: BaseMessage) -> BaseMessage:
         if self.user_suffix and isinstance(message, HumanMessage):
-            message.content = message.content[: -len(self.user_suffix)]
+            if message.content.endswith(self.user_suffix):
+                message.content = message.content[: -len(self.user_suffix)]
         elif self.ai_suffix and isinstance(message, AIMessage):
-            message.content = message.content[: -len(self.ai_suffix)]
+            if message.content.endswith(self.ai_suffix):
+                message.content = message.content[: -len(self.ai_suffix)]
         return message
