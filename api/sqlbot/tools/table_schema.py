@@ -13,7 +13,7 @@ class CustomTableSchemaTool(InfoSQLDatabaseTool):
 
     name = "sql_db_schema"
     description = """
-    Input to this tool is a comma-separated list of tables, output is the schema and sample rows for those tables.    
+    Input to this tool is a comma-separated list of table names, output is the schemas and sample rows for those tables.    
 
     Example Input: "table1, table2, table3"
     """
