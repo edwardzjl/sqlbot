@@ -59,8 +59,8 @@ class SQLBotToolkit(SQLDatabaseToolkit):
             template=QUERY_CHECKER,
         )
         return [
-            query_sql_database_tool,
-            table_schema_tool,
             list_tables_tool,
+            table_schema_tool,
             query_sql_checker_tool,
+            query_sql_database_tool,
         ]
