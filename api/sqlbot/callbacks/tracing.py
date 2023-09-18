@@ -21,7 +21,9 @@ class TracingLLMCallbackHandler(AsyncCallbackHandler):
         **kwargs: Any,
     ) -> None:
         """Run when LLM starts running."""
-        logger.debug(f"on_llm_start, run_id={run_id} prompts={prompts}")
+        logger.debug(
+            f"on_llm_start run_id={run_id} parent_run_id={parent_run_id} prompts={prompts}"
+        )
 
     async def on_llm_new_token(
         self,
@@ -34,7 +36,9 @@ class TracingLLMCallbackHandler(AsyncCallbackHandler):
         **kwargs: Any,
     ) -> None:
         """Run on new LLM token. Only available when streaming is enabled."""
-        logger.trace(f"on_llm_new_token, run_id={run_id} token={token} chunk={chunk}")
+        logger.trace(
+            f"on_llm_new_token run_id={run_id} parent_run_id={parent_run_id} token={token} chunk={chunk}"
+        )
 
     async def on_llm_end(
         self,
@@ -46,7 +50,9 @@ class TracingLLMCallbackHandler(AsyncCallbackHandler):
         **kwargs: Any,
     ) -> None:
         """Run when LLM ends running."""
-        logger.debug(f"on_llm_end, run_id={run_id} response={response}")
+        logger.debug(
+            f"on_llm_end run_id={run_id} parent_run_id={parent_run_id} response={response}"
+        )
 
     async def on_llm_error(
         self,
@@ -58,4 +64,6 @@ class TracingLLMCallbackHandler(AsyncCallbackHandler):
         **kwargs: Any,
     ) -> None:
         """Run when LLM errors."""
-        logger.error(f"on_llm_error, run_id={run_id} error={error}")
+        logger.error(
+            f"on_llm_error run_id={run_id} parent_run_id={parent_run_id} error={error}"
+        )
