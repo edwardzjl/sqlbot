@@ -67,6 +67,13 @@ function App() {
           case "thought/text":
             setThoughts((prevThought) => prevThought + payload.content);
             break;
+          case "info/intermediate-steps":
+            dispatch({
+              type: "stepsAdded",
+              id: payload.conversation,
+              message: { id: payload.id, content: payload.intermediate_steps },
+            });
+            break;
           case "error":
             setSnackbar({
               open: true,

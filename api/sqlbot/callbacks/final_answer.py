@@ -6,7 +6,7 @@ from langchain.schema import AgentFinish
 from langchain.schema.output import LLMResult
 
 from sqlbot.callbacks.base import WebsocketCallbackHandler
-from sqlbot.schemas import ChatMessage
+from sqlbot.schemas import ChatMessage, IntermediateSteps
 
 DEFAULT_ANSWER_PREFIX_TOKENS = ["Final", "Answer", ":"]
 
@@ -102,6 +102,7 @@ class StreamingFinalAnswerCallbackHandler(WebsocketCallbackHandler):
 
         # Check if the last n tokens match the answer_prefix_tokens list ...
         if self.check_if_answer_reached():
+            self.message_id = run_id
             self.answer_reached = True
             message = ChatMessage(
                 id=run_id,
@@ -152,3 +153,26 @@ class StreamingFinalAnswerCallbackHandler(WebsocketCallbackHandler):
                 type="text",
             )
             await self.websocket.send_json(message.dict())
+
+    async def on_chain_end(
+        self,
+        outputs: dict[str, Any],
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        **kwargs: Any,
+    ) -> None:
+        """Run when chain ends running."""
+        # TODO: this condition is a bit naive
+        if self.answer_reached:
+            if "intermediate_steps" in outputs:
+                wrap = IntermediateSteps(__root__=outputs["intermediate_steps"])
+                message = ChatMessage(
+                    id=self.message_id,
+                    conversation=self.conversation_id,
+                    from_="ai",
+                    intermediate_steps=wrap.json(),
+                    type="info/intermediate-steps",
+                )
+                await self.websocket.send_text(message.json())
