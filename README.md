@@ -8,6 +8,12 @@ This project is evolved from <https://github.com/edwardzjl/chatbot>, utilizing [
 - Customizable Data Definition Language (DDL, the `CREATE TABLE` statement): Typically, SQL agents are not able to modify the DDL of the database. However, the original DDL often contains extraneous information. Moreover, at least in Postgres, the DDL lacks the column descriptions, which are crucial for LLMs to accurately choose the appropriate columns.
 - Redis Integration: Both the supplementary table descriptions and customized DDL are conveniently stored in Redis. This approach ensures swift access and facilitates straightforward updates.
 
+## Demo
+
+A live demo was served at <https://sqlbot.agi.zjuici.com>
+
+This demo was built on [IMDb](https://relational.fit.cvut.cz/dataset/IMDb) dataset, with 6 tables.
+
 ## Deployment
 
 See [deployment instructions](./manifests/README.md)
