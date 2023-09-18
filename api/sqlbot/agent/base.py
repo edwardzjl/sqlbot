@@ -1,15 +1,24 @@
 """SQL agent."""
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
 from langchain.agents.agent import AgentExecutor
-from langchain.agents.structured_chat.base import StructuredChatAgent
+from langchain.agents.structured_chat.base import (
+    StructuredChatAgent,
+    HUMAN_MESSAGE_TEMPLATE,
+)
 from langchain.agents.structured_chat.output_parser import (
     StructuredChatOutputParserWithRetries,
 )
 from langchain.callbacks.base import BaseCallbackManager
 from langchain.chains.llm import LLMChain
+from langchain.prompts.chat import (
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate,
+    SystemMessagePromptTemplate,
+)
 from langchain.schema import AgentAction, BasePromptTemplate
 from langchain.schema.language_model import BaseLanguageModel
+from langchain.tools import BaseTool
 
 from sqlbot.agent.prompts import PREFIX, SUFFIX, FORMAT_INSTRUCTIONS
 from sqlbot.agent.toolkit import SQLBotToolkit
@@ -17,6 +26,33 @@ from sqlbot.agent.output_parser import StripFinalAnswerPrefixStructuredChatOutpu
 
 
 class AppendThoughtAgent(StructuredChatAgent):
+    @classmethod
+    def create_prompt(
+        cls,
+        tools: Sequence[BaseTool],
+        prefix: str = PREFIX,
+        suffix: str = SUFFIX,
+        human_message_template: str = HUMAN_MESSAGE_TEMPLATE,
+        format_instructions: str = FORMAT_INSTRUCTIONS,
+        input_variables: Optional[List[str]] = None,
+        memory_prompts: Optional[List[BasePromptTemplate]] = None,
+    ) -> BasePromptTemplate:
+        tool_strings = "\n".join(
+            [f"> {tool.name}: {tool.description}" for tool in tools]
+        )
+        tool_names = ", ".join([tool.name for tool in tools])
+        format_instructions = format_instructions.format(tool_names=tool_names)
+        template = "\n\n".join([prefix, tool_strings, format_instructions, suffix])
+        if input_variables is None:
+            input_variables = ["input", "agent_scratchpad"]
+        _memory_prompts = memory_prompts or []
+        messages = [
+            SystemMessagePromptTemplate.from_template(template),
+            *_memory_prompts,
+            HumanMessagePromptTemplate.from_template(human_message_template),
+        ]
+        return ChatPromptTemplate(input_variables=input_variables, messages=messages)
+
     def _construct_scratchpad(
         self, intermediate_steps: List[tuple[AgentAction, str]]
     ) -> str:
