@@ -28,6 +28,8 @@ const Alert = forwardRef(function Alert(props, ref) {
 });
 
 function App() {
+  const [username, setUsername] = useState("");
+
   const ws = useRef(null);
   useEffect(() => {
     const wsurl = window.location.origin.replace(/^http/, "ws") + "/api/chat";
@@ -43,21 +45,34 @@ function App() {
             dispatch({
               type: "messageAdded",
               id: payload.conversation,
-              message: { id: payload.id, from: payload.from, content: payload.content, intermediate_steps: payload.intermediate_steps },
+              message: {
+                id: payload.id,
+                from: payload.from,
+                content: payload.content,
+                intermediate_steps: payload.intermediate_steps,
+              },
             });
             break;
           case "stream/start":
             dispatch({
               type: "messageAdded",
               id: payload.conversation,
-              message: { id: payload.id, from: payload.from, content: payload.content || "" },
+              message: {
+                id: payload.id,
+                from: payload.from,
+                content: payload.content || "",
+              },
             });
             break;
           case "stream/text":
             dispatch({
               type: "messageAppended",
               id: payload.conversation,
-              message: { id: payload.id, from: payload.from, content: payload.content },
+              message: {
+                id: payload.id,
+                from: payload.from,
+                content: payload.content,
+              },
             });
             break;
           case "thought/start":
@@ -94,7 +109,16 @@ function App() {
     };
   }, [ws]);
 
-  const [username, setUsername] = useState("");
+  const sendMessage = async (convId, message) => {
+    ws.current?.send(
+      JSON.stringify({
+        conversation: convId,
+        from: username,
+        content: message,
+        type: "text",
+      })
+    );
+  };
 
   /**
    * All conversations of the current user.
@@ -114,13 +138,6 @@ function App() {
       setCurrentConv(currentConv);
     }
   }, [conversations]);
-
-  /**
-   * open, severity, message
-   */
-  const [snackbar, setSnackbar] = useState(
-    /** @type {{open: boolean, severity: string?, message: string}} */ {}
-  );
 
   const [thoughtOpen, setThoughtOpen] = useState(false);
   const [thoughts, setThoughts] = useState("");
@@ -180,19 +197,15 @@ function App() {
 
     initialization();
 
-    return () => { };
+    return () => {};
   }, []);
 
-  const sendMessage = async (convId, message) => {
-    ws.current?.send(
-      JSON.stringify({
-        conversation: convId,
-        from: username,
-        content: message,
-        type: "text",
-      })
-    );
-  };
+  /**
+   * open, severity, message
+   */
+  const [snackbar, setSnackbar] = useState(
+    /** @type {{open: boolean, severity: string?, message: string}} */ {}
+  );
 
   const closeSnackbar = (event, reason) => {
     if (reason === "clickaway") {
@@ -208,31 +221,43 @@ function App() {
           <ConversationContext.Provider value={{ conversations, dispatch }}>
             <SideMenu />
             <section className="chatbox">
-              <Thought open={thoughtOpen} onClose={() => setThoughtOpen(false)} content={thoughts} />
-              <StepsDialog steps={steps} open={stepsDialogOpen} onClose={() => setStepsDialogOpen(false)} />
+              <Thought
+                open={thoughtOpen}
+                onClose={() => setThoughtOpen(false)}
+                content={thoughts}
+              />
+              <StepsDialog
+                steps={steps}
+                open={stepsDialogOpen}
+                onClose={() => setStepsDialogOpen(false)}
+              />
               <ChatLog>
                 {currentConv?.messages?.map((message, index) => (
-                  <ChatMessage key={index} message={message} onStepsClick={() => onStepsClick(message)} />
+                  <ChatMessage
+                    key={index}
+                    message={message}
+                    onStepsClick={() => onStepsClick(message)}
+                  />
                 ))}
               </ChatLog>
               <ChatInput chatId={currentConv?.id} onSend={sendMessage} />
             </section>
-            <Snackbar
-              open={snackbar.open}
-              autoHideDuration={3000}
-              onClose={closeSnackbar}
-            >
-              <Alert
-                severity={snackbar.severity}
-                sx={{ width: "100%" }}
-                onClose={closeSnackbar}
-              >
-                {snackbar.message}
-              </Alert>
-            </Snackbar>
           </ConversationContext.Provider>
         </UserContext.Provider>
       </SnackbarContext.Provider>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={closeSnackbar}
+      >
+        <Alert
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+          onClose={closeSnackbar}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }
