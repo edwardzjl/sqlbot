@@ -5,7 +5,7 @@ psycopg[c]==3.1.10
 redis[hiredis]==4.6.0
 redis-om==0.2.1
 requests==2.31.0
-SQLAlchemy==2.0.20
+SQLAlchemy==2.0.21
 sqlparse==0.4.4
 text-generation==0.6.0
 uvicorn[standard]==0.23.2
