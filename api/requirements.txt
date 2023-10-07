@@ -1,7 +1,11 @@
 fastapi==0.103.2
 langchain==0.0.308
 loguru==0.7.2
+# redis-om 0.2.1 requires pydantic<2.1.0
+pydantic==2.0.3
+pydantic-settings==2.0.3
 psycopg[c]==3.1.12
+# redis-om 0.2.1 requires redis<5.0.0
 redis[hiredis]==4.6.0
 redis-om==0.2.1
 requests==2.31.0

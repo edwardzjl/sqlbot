@@ -3,7 +3,8 @@ from typing import Any, Optional
 
 from langchain.callbacks.manager import CallbackManagerForToolRun
 from langchain.tools.sql_database.tool import ListSQLDatabaseTool
-from pydantic import RedisDsn, root_validator
+from pydantic import RedisDsn
+from pydantic.v1 import root_validator
 
 
 class CustomListTablesTool(ListSQLDatabaseTool):
