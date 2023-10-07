@@ -1,12 +1,12 @@
-fastapi==0.103.1
-langchain==0.0.301
+fastapi==0.103.2
+langchain==0.0.306
 loguru==0.7.2
-psycopg[c]==3.1.11
+psycopg[c]==3.1.12
 redis[hiredis]==4.6.0
 redis-om==0.2.1
 requests==2.31.0
 SQLAlchemy==2.0.21
 sqlparse==0.4.4
-text-generation==0.6.0
+text-generation==0.6.1
 uvicorn[standard]==0.23.2
 websockets==11.0.3
