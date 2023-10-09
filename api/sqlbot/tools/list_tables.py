@@ -18,7 +18,7 @@ class CustomListTablesTool(ListSQLDatabaseTool):
         "Input to this tool is an empty string, output is a dict with table names as keys and table descriptions as values."
     )
 
-    redis_url: RedisDsn = "redis://localhost:6379"
+    redis_url: str = "redis://localhost:6379"
     key_prefix: str = "sqlbot:tables:"
     client: Any = None
     # aclient: Any = None

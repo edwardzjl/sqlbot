@@ -14,7 +14,7 @@ from sqlbot.tools.prompt import QUERY_CHECKER
 
 
 class SQLBotToolkit(SQLDatabaseToolkit):
-    redis_url: RedisDsn = "redis://localhost:6379"
+    redis_url: str = "redis://localhost:6379"
     conversation_id: str
 
     def get_tools(self) -> list[BaseTool]:

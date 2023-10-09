@@ -2,21 +2,70 @@ from datetime import datetime
 from typing import Any, Optional
 from uuid import UUID, uuid4
 
-from aredis_om import JsonModel, Field
 from langchain.schema import AgentAction, BaseMessage
-from pydantic import model_validator, ConfigDict, BaseModel, RootModel
-from pydantic.v1 import root_validator
-
+from pydantic import (
+    model_validator,
+    ConfigDict,
+    BaseModel,
+    RootModel,
+    Field,
+)
 
 from sqlbot.utils import utcnow
+
+
+class IntermediateStep(RootModel):
+    """Used to serialize intermediate step.
+    Python's tuple serializes as a list ('[elem1, elem2]'), making deserialization challenging.
+    To address this, I opt to store it as a list.
+
+    Additionally, langchain.schema.AgentAction is a pydantic v1 model, which proves somewhat verbose
+    to serialize and deserialize in v2. Consequently I store it as a dict.
+
+    While there is consideration storing action and observation as different fields in the future,
+    for alignment with langchain's schema (also for simplicity), I currently store them as a list.
+    """
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    root: list[Any]
+    """[dict, Any] of AgentAction and observation.
+    I don't know why deserializing tuple is such a pain in the ass, list just works.
+    """
+
+    def __len__(self):
+        return len(self.root)
+
+    def __iter__(self):
+        return iter(self.root)
+
+    def __getitem__(self, item):
+        return self.root[item]
+
+    @model_validator(mode="before")
+    @classmethod
+    def tuple_to_list(cls, values):
+        if isinstance(values, tuple) or isinstance(values, list):
+            action = values[0]
+            if isinstance(action, AgentAction):
+                return [action.dict(), values[1]]
+            return [action, values[1]]
+        return values
 
 
 class IntermediateSteps(RootModel):
     """Used to serialize list of pydantic models."""
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    root: list[IntermediateStep]
 
-    root: list[tuple[AgentAction, Any]]
+    def __len__(self):
+        return len(self.root)
+
+    def __iter__(self):
+        return iter(self.root)
+
+    def __getitem__(self, item):
+        return self.root[item]
 
 
 class ChatMessage(BaseModel):
@@ -30,42 +79,25 @@ class ChatMessage(BaseModel):
     """A transient field to determine conversation id."""
     content: Optional[str] = None
     type: str
-    intermediate_steps: Optional[list[tuple[AgentAction, Any]]] = None
+    intermediate_steps: Optional[IntermediateSteps] = None
     # sent_at is not an important information for the user, as far as I can tell.
     # But it introduces some complexity in the code, so I'm removing it for now.
     # sent_at: datetime = Field(default_factory=datetime.now)
-
-    @model_validator(mode="before")
-    @classmethod
-    def deser_steps(cls, values):
-        if "intermediate_steps" in values and values["intermediate_steps"] is not None:
-            values["intermediate_steps"] = IntermediateSteps.model_validate_json(
-                values["intermediate_steps"]
-            ).root
-        return values
 
     @staticmethod
     def from_lc(lc_message: BaseMessage, conv_id: str, from_: str) -> "ChatMessage":
         msg_id_str = lc_message.additional_kwargs.get("id", None)
         msg_id = UUID(msg_id_str) if msg_id_str else uuid4()
         steps_str = lc_message.additional_kwargs.get("intermediate_steps", None)
+        steps = IntermediateSteps.model_validate_json(steps_str) if steps_str else None
         return ChatMessage(
             id=msg_id,
             conversation=conv_id,
             from_=from_,
             content=lc_message.content,
             type="text",
-            intermediate_steps=steps_str,
+            intermediate_steps=steps,
         )
-
-    _encoders_by_type = {
-        datetime: lambda dt: dt.isoformat(timespec="seconds"),
-        UUID: lambda uid: uid.hex,
-    }
-
-    def _iter(self, **kwargs):
-        for key, value in super()._iter(**kwargs):
-            yield key, self._encoders_by_type.get(type(value), lambda v: v)(value)
 
     def model_dump(
         self, by_alias: bool = True, exclude_none: bool = True, **kwargs
@@ -74,20 +106,25 @@ class ChatMessage(BaseModel):
             by_alias=by_alias, exclude_none=exclude_none, **kwargs
         )
 
+    def model_dump_json(
+        self, by_alias: bool = True, exclude_none: bool = True, **kwargs
+    ) -> str:
+        return super().model_dump_json(
+            by_alias=by_alias, exclude_none=exclude_none, **kwargs
+        )
 
-class Conversation(JsonModel):
-    id: Optional[str]
+
+class Conversation(BaseModel):
+    id: Optional[str] = None
     title: str
-    owner: str = Field(index=True)
+    owner: str
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = created_at
 
-    # TODO: this is not clear as the model will return both a 'pk' and an 'id' with the same value.
-    # But I think id is more general than pk.
-    # TODO: redis-om supports pydantic v2 but still uses pydantic v1 inside.
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def set_id(cls, values):
-        if "pk" in values:
+        if "pk" in values and "id" not in values:
             values["id"] = values["pk"]
         return values
 

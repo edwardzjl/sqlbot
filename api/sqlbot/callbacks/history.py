@@ -55,8 +55,8 @@ class PersistHistoryCallbackHandler(AsyncCallbackHandler):
         if self.should_persist(tags):
             additional_kwargs = {"id": run_id.hex, "sent_at": utcnow().isoformat()}
             if "intermediate_steps" in outputs:
-                wrap = IntermediateSteps(__root__=outputs["intermediate_steps"])
-                additional_kwargs["intermediate_steps"] = wrap.json()
+                wrap = IntermediateSteps.model_validate(outputs["intermediate_steps"])
+                additional_kwargs["intermediate_steps"] = wrap.model_dump_json()
             msg = AIMessage(
                 content=outputs[self.memory.output_key],
                 additional_kwargs=additional_kwargs,

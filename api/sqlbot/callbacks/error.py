@@ -23,7 +23,7 @@ class LCErrorCallbackHandler(WebsocketCallbackHandler):
             content=f"llm error: {str(error)}",
             type="error",
         )
-        await self.websocket.send_json(message.model_dump())
+        await self.websocket.send_text(message.model_dump_json())
 
     async def on_chain_error(
         self,
@@ -42,7 +42,7 @@ class LCErrorCallbackHandler(WebsocketCallbackHandler):
             content=f"chain error: {str(error)}",
             type="error",
         )
-        await self.websocket.send_json(message.model_dump())
+        await self.websocket.send_text(message.model_dump_json())
 
     async def on_tool_error(
         self,
@@ -61,7 +61,7 @@ class LCErrorCallbackHandler(WebsocketCallbackHandler):
             content=f"tool error: {str(error)}",
             type="error",
         )
-        await self.websocket.send_json(message.model_dump())
+        await self.websocket.send_text(message.model_dump_json())
 
     async def on_retriever_error(
         self,
@@ -80,4 +80,4 @@ class LCErrorCallbackHandler(WebsocketCallbackHandler):
             content=f"retriever error: {str(error)}",
             type="error",
         )
-        await self.websocket.send_json(message.model_dump())
+        await self.websocket.send_text(message.model_dump_json())

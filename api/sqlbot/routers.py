@@ -25,6 +25,7 @@ from sqlbot.callbacks import (
 )
 from sqlbot.config import settings
 from sqlbot.history import AppendSuffixHistory
+from sqlbot.models import Conversation as ORMConversation
 from sqlbot.schemas import (
     ChatMessage,
     ConversationDetail,
@@ -41,7 +42,7 @@ router = APIRouter(
 
 tracing_callback = TracingLLMCallbackHandler()
 llm = HuggingFaceTextGenInference(
-    inference_server_url=settings.isvc_llm,
+    inference_server_url=str(settings.isvc_llm),
     max_new_tokens=512,
     temperature=0.1,
     typical_p=None,
@@ -51,7 +52,7 @@ llm = HuggingFaceTextGenInference(
 )
 
 coder_llm = HuggingFaceTextGenInference(
-    inference_server_url=settings.isvc_coder_llm,
+    inference_server_url=str(settings.isvc_coder_llm),
     max_new_tokens=512,
     temperature=0.1,
     typical_p=None,
@@ -60,14 +61,14 @@ coder_llm = HuggingFaceTextGenInference(
 
 history_prompt = MessagesPlaceholder(variable_name="history")
 
-db = SQLDatabase.from_uri(settings.warehouse_url, sample_rows_in_table_info=3)
+db = SQLDatabase.from_uri(str(settings.warehouse_url), sample_rows_in_table_info=3)
 
 
 @router.get("/conversations", response_model=list[Conversation])
 async def get_conversations(userid: Annotated[str | None, UserIdHeader()] = None):
-    convs = await Conversation.find(Conversation.owner == userid).all()
+    convs = await ORMConversation.find(ORMConversation.owner == userid).all()
     convs.sort(key=lambda x: x.updated_at, reverse=True)
-    return convs
+    return [Conversation(**conv.dict()) for conv in convs]
 
 
 # Cannot marshall response as response_model=list[tuple[AgentAction, Any]], don't know why
@@ -76,9 +77,9 @@ async def get_conversation(
     conversation_id: str,
     userid: Annotated[str | None, UserIdHeader()] = None,
 ):
-    conv = await Conversation.get(conversation_id)
+    conv = await ORMConversation.get(conversation_id)
     history = AppendSuffixHistory(
-        url=settings.redis_om_url,
+        url=str(settings.redis_om_url),
         user_suffix=HUMAN_SUFFIX,
         ai_suffix=AI_SUFFIX,
         session_id=f"{userid}:{conversation_id}",
@@ -92,15 +93,15 @@ async def get_conversation(
             )
             for message in history.messages
         ],
-        **conv.model_dump(),
+        **conv.dict(),
     )
 
 
 @router.post("/conversations", status_code=201, response_model=ConversationDetail)
 async def create_conversation(userid: Annotated[str | None, UserIdHeader()] = None):
-    conv = Conversation(title=f"New chat", owner=userid)
+    conv = ORMConversation(title=f"New chat", owner=userid)
     await conv.save()
-    return conv
+    return ConversationDetail(**conv.dict())
 
 
 @router.put("/conversations/{conversation_id}")
@@ -109,7 +110,7 @@ async def update_conversation(
     payload: UpdateConversation,
     userid: Annotated[str | None, UserIdHeader()] = None,
 ):
-    conv = await Conversation.get(conversation_id)
+    conv = await ORMConversation.get(conversation_id)
     conv.title = payload.title
     conv.updated_at = utcnow()
     await conv.save()
@@ -119,7 +120,7 @@ async def update_conversation(
 async def delete_conversation(
     conversation_id: str, userid: Annotated[str | None, UserIdHeader()] = None
 ):
-    await Conversation.delete(conversation_id)
+    await ORMConversation.delete(conversation_id)
 
 
 @router.websocket("/chat")
@@ -156,12 +157,12 @@ async def generate(
             toolkit = SQLBotToolkit(
                 db=db,
                 llm=coder_llm,
-                redis_url=settings.redis_om_url,
+                redis_url=str(settings.redis_om_url),
                 conversation_id=message.conversation,
             )
 
             history = AppendSuffixHistory(
-                url=settings.redis_om_url,
+                url=str(settings.redis_om_url),
                 user_suffix=HUMAN_SUFFIX,
                 ai_suffix=AI_SUFFIX,
                 session_id=f"{userid}:{message.conversation}",

@@ -1,6 +1,139 @@
 import unittest
 
-from sqlbot.schemas import ChatMessage, Conversation
+from langchain.schema import AgentAction
+
+from sqlbot.schemas import (
+    ChatMessage,
+    Conversation,
+    IntermediateStep,
+    IntermediateSteps,
+)
+
+
+class TestIntermediateStep(unittest.TestCase):
+    def test_obj_to_step(self):
+        _obj = (
+            AgentAction(tool="some_tool", tool_input="some_input", log="some log"),
+            "baz",
+        )
+        step = IntermediateStep.model_validate(_obj)
+        action = step[0]
+        self.assertDictEqual(
+            action, {"tool": "some_tool", "tool_input": "some_input", "log": "some log"}
+        )
+        observation = step[1]
+        self.assertEqual(observation, "baz")
+
+    def test_step_to_obj(self):
+        step = IntermediateStep(
+            root=[
+                AgentAction(tool="some_tool", tool_input="some_input", log="some log"),
+                "baz",
+            ]
+        )
+        self.assertListEqual(
+            step.model_dump(),
+            [
+                {"tool": "some_tool", "tool_input": "some_input", "log": "some log"},
+                "baz",
+            ],
+        )
+
+    def test_str_to_step(self):
+        step_str = (
+            '[{"tool":"some_tool","tool_input":"some_input","log":"some log"},"baz"]'
+        )
+        step = IntermediateStep.model_validate_json(step_str)
+        action = step[0]
+        self.assertDictEqual(
+            action, {"tool": "some_tool", "tool_input": "some_input", "log": "some log"}
+        )
+        observation = step[1]
+        self.assertEqual(observation, "baz")
+
+    def test_step_to_str(self):
+        step = IntermediateStep(
+            root=[
+                AgentAction(tool="some_tool", tool_input="some_input", log="some log"),
+                "baz",
+            ]
+        )
+        self.assertEqual(
+            step.model_dump_json(),
+            '[{"tool":"some_tool","tool_input":"some_input","log":"some log"},"baz"]',
+        )
+
+
+class TestIntermediateSteps(unittest.TestCase):
+    def test_obj_to_steps(self):
+        _obj = [
+            (
+                AgentAction(tool="some_tool", tool_input="some_input", log="some log"),
+                "baz",
+            )
+        ]
+        steps = IntermediateSteps.model_validate(_obj)
+        self.assertEqual(len(steps), 1)
+        step = steps[0]  # IntermediateStep
+        self.assertDictEqual(
+            step[0],
+            {"tool": "some_tool", "tool_input": "some_input", "log": "some log"},
+        )
+        self.assertEqual(step[1], "baz")
+
+    def test_str_to_steps(self):
+        _str = (
+            '[[{"tool":"some_tool","tool_input":"some_input","log":"some log"},"baz"]]'
+        )
+        steps = IntermediateSteps.model_validate_json(_str)
+        self.assertEqual(len(steps), 1)
+        step = steps[0]  # IntermediateStep
+        self.assertDictEqual(
+            step[0],
+            {"tool": "some_tool", "tool_input": "some_input", "log": "some log"},
+        )
+        self.assertEqual(step[1], "baz")
+
+    def test_steps_to_obj(self):
+        steps = IntermediateSteps(
+            root=[
+                [
+                    AgentAction(
+                        tool="some_tool", tool_input="some_input", log="some log"
+                    ),
+                    "baz",
+                ]
+            ]
+        )
+        self.assertListEqual(
+            steps.model_dump(),
+            [
+                [
+                    {
+                        "tool": "some_tool",
+                        "tool_input": "some_input",
+                        "log": "some log",
+                    },
+                    "baz",
+                ]
+            ],
+        )
+
+    def test_steps_to_str(self):
+        steps = IntermediateSteps(
+            root=[
+                [
+                    AgentAction(
+                        tool="some_tool", tool_input="some_input", log="some log"
+                    ),
+                    "baz",
+                ]
+            ]
+        )
+        self.assertEqual(
+            steps.model_dump_json(),
+            '[[{"tool":"some_tool","tool_input":"some_input","log":"some log"},"baz"]]',
+        )
 
 
 class TestConversationSchema(unittest.TestCase):

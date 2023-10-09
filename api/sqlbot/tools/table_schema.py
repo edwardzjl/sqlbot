@@ -18,7 +18,7 @@ class CustomTableSchemaTool(InfoSQLDatabaseTool):
 
     Example Input: "table1, table2, table3"
     """
-    redis_url: RedisDsn = "redis://localhost:6379"
+    redis_url: str = "redis://localhost:6379"
     key_prefix: str = "sqlbot:schemas:"
     client: Any = None
 
