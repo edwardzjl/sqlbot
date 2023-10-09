@@ -6,7 +6,7 @@ from langchain.schema import AgentFinish
 from langchain.schema.output import LLMResult
 
 from sqlbot.callbacks.base import WebsocketCallbackHandler
-from sqlbot.schemas import ChatMessage, IntermediateSteps
+from sqlbot.schemas import ChatMessage
 
 DEFAULT_ANSWER_PREFIX_TOKENS = ["Final", "Answer", ":"]
 
@@ -94,7 +94,7 @@ class StreamingFinalAnswerCallbackHandler(WebsocketCallbackHandler):
                 content=token,
                 type="stream/text",
             )
-            await self.websocket.send_json(message.model_dump())
+            await self.websocket.send_text(message.model_dump_json())
             return
 
         # Remember the last n tokens, where n = len(answer_prefix_tokens)
@@ -111,7 +111,7 @@ class StreamingFinalAnswerCallbackHandler(WebsocketCallbackHandler):
                 content=None,
                 type="stream/start",
             )
-            await self.websocket.send_json(message.model_dump())
+            await self.websocket.send_text(message.model_dump_json())
             return
 
     async def on_llm_end(
@@ -131,7 +131,7 @@ class StreamingFinalAnswerCallbackHandler(WebsocketCallbackHandler):
             content=None,
             type="stream/end",
         )
-        await self.websocket.send_json(message.model_dump())
+        await self.websocket.send_text(message.model_dump_json())
 
     async def on_agent_finish(
         self,
@@ -152,7 +152,7 @@ class StreamingFinalAnswerCallbackHandler(WebsocketCallbackHandler):
                 content=finish.return_values.get("output", None),
                 type="text",
             )
-            await self.websocket.send_json(message.model_dump())
+            await self.websocket.send_text(message.model_dump_json())
 
     async def on_chain_end(
         self,
@@ -167,12 +167,11 @@ class StreamingFinalAnswerCallbackHandler(WebsocketCallbackHandler):
         # TODO: this condition is a bit naive
         if self.answer_reached:
             if "intermediate_steps" in outputs:
-                wrap = IntermediateSteps(__root__=outputs["intermediate_steps"])
                 message = ChatMessage(
                     id=self.message_id,
                     conversation=self.conversation_id,
                     from_="ai",
-                    intermediate_steps=wrap.json(),
+                    intermediate_steps=outputs["intermediate_steps"],
                     type="info/intermediate-steps",
                 )
-                await self.websocket.send_text(message.json())
+                await self.websocket.send_text(message.model_dump_json())

@@ -4,7 +4,7 @@ from uuid import UUID
 from langchain.schema.agent import AgentFinish
 from langchain.callbacks.base import AsyncCallbackHandler
 
-from sqlbot.schemas import Conversation
+from sqlbot.models import Conversation
 from sqlbot.utils import utcnow
 
 

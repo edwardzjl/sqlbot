@@ -46,4 +46,4 @@ class WebsocketHumanApprovalCallbackHandler(WebsocketCallbackHandler):
                 content=f"executing sql:\n```sql\n{formated_sql}\n```",
                 type="text",
             )
-            await self.websocket.send_json(message.model_dump())
+            await self.websocket.send_text(message.model_dump_json())
