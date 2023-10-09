@@ -94,7 +94,7 @@ class StreamingFinalAnswerCallbackHandler(WebsocketCallbackHandler):
                 content=token,
                 type="stream/text",
             )
-            await self.websocket.send_json(message.dict())
+            await self.websocket.send_json(message.model_dump())
             return
 
         # Remember the last n tokens, where n = len(answer_prefix_tokens)
@@ -111,7 +111,7 @@ class StreamingFinalAnswerCallbackHandler(WebsocketCallbackHandler):
                 content=None,
                 type="stream/start",
             )
-            await self.websocket.send_json(message.dict())
+            await self.websocket.send_json(message.model_dump())
             return
 
     async def on_llm_end(
@@ -131,7 +131,7 @@ class StreamingFinalAnswerCallbackHandler(WebsocketCallbackHandler):
             content=None,
             type="stream/end",
         )
-        await self.websocket.send_json(message.dict())
+        await self.websocket.send_json(message.model_dump())
 
     async def on_agent_finish(
         self,
@@ -152,7 +152,7 @@ class StreamingFinalAnswerCallbackHandler(WebsocketCallbackHandler):
                 content=finish.return_values.get("output", None),
                 type="text",
             )
-            await self.websocket.send_json(message.dict())
+            await self.websocket.send_json(message.model_dump())
 
     async def on_chain_end(
         self,

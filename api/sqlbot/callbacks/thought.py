@@ -72,7 +72,7 @@ class StreamingIntermediateThoughtCallbackHandler(WebsocketCallbackHandler):
             content=None,
             type="thought/start",
         )
-        await self.websocket.send_json(message.dict())
+        await self.websocket.send_json(message.model_dump())
 
     async def on_llm_new_token(
         self,
@@ -98,7 +98,7 @@ class StreamingIntermediateThoughtCallbackHandler(WebsocketCallbackHandler):
                     content=t,
                     type="thought/text",
                 )
-                await self.websocket.send_json(message.dict())
+                await self.websocket.send_json(message.model_dump())
             message = ChatMessage(
                 id=run_id,
                 conversation=self.conversation_id,
@@ -106,7 +106,7 @@ class StreamingIntermediateThoughtCallbackHandler(WebsocketCallbackHandler):
                 content=None,
                 type="thought/end",
             )
-            await self.websocket.send_json(message.dict())
+            await self.websocket.send_json(message.model_dump())
             return
 
         self.append_to_last_tokens(token)
@@ -119,7 +119,7 @@ class StreamingIntermediateThoughtCallbackHandler(WebsocketCallbackHandler):
                 content=None,
                 type="thought/end",
             )
-            await self.websocket.send_json(message.dict())
+            await self.websocket.send_json(message.model_dump())
             return
 
         if "" in self.last_tokens:
@@ -134,4 +134,4 @@ class StreamingIntermediateThoughtCallbackHandler(WebsocketCallbackHandler):
             content=self.last_tokens[0],
             type="thought/text",
         )
-        await self.websocket.send_json(message.dict())
+        await self.websocket.send_json(message.model_dump())
