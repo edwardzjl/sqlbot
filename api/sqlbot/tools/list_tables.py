@@ -45,7 +45,7 @@ class CustomListTablesTool(ListSQLDatabaseTool):
             table_name = key.removeprefix(self.key_prefix)
             if table_name in usable_tables:
                 res[table_name] = self.client.get(key)
-        return json.dumps(res)
+        return json.dumps(res, ensure_ascii=False)
 
     async def _arun(
         self,

@@ -1,0 +1,27 @@
+text:
+- name: sql_query
+  no_index: false
+  no_stem: false
+  sortable: false
+  weight: 1
+  withsuffixtrie: false
+- name: type
+  no_index: false
+  no_stem: false
+  sortable: false
+  weight: 1
+  withsuffixtrie: false
+- name: content
+  no_index: false
+  no_stem: false
+  sortable: false
+  weight: 1
+  withsuffixtrie: false
+vector:
+- algorithm: FLAT
+  block_size: 1000
+  datatype: FLOAT32
+  dims: 1024
+  distance_metric: COSINE
+  initial_cap: 20000
+  name: content_vector

@@ -3,22 +3,27 @@
 from langchain.agents.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from langchain.tools import BaseTool
 from langchain.tools.sql_database.tool import QuerySQLCheckerTool
-from pydantic import RedisDsn
+from langchain.schema.vectorstore import VectorStoreRetriever
 
 from sqlbot.tools import (
     CustomTableSchemaTool,
     CustomListTablesTool,
     FakeAsyncQuerySQLDataBaseTool,
+    RetrieverTool,
+    TableRelationshipTool,
 )
 from sqlbot.tools.prompt import QUERY_CHECKER
 
 
 class SQLBotToolkit(SQLDatabaseToolkit):
     redis_url: str = "redis://localhost:6379"
+    query_retriever: VectorStoreRetriever
+    relationship_retriever: VectorStoreRetriever
     conversation_id: str
 
     def get_tools(self) -> list[BaseTool]:
         """Get the tools in the toolkit."""
+        retriever_tool = RetrieverTool(retriever=self.query_retriever)
         list_tables_tool = CustomListTablesTool(db=self.db, redis_url=self.redis_url)
         table_schema_tool_description = (
             "Use this tool to get the schema of specific tables. "
@@ -40,7 +45,7 @@ class SQLBotToolkit(SQLDatabaseToolkit):
             "If an error is returned, rewrite the query and try again. "
             "If you encounter an issue with Unknown column "
             f"'xxxx' in 'field list', or no such column 'xxxx', use {table_schema_tool.name} "
-            "to get the correct table columns."
+            "to get the correct table columns. "
         )
         query_sql_database_tool = FakeAsyncQuerySQLDataBaseTool(
             db=self.db,
@@ -48,8 +53,8 @@ class SQLBotToolkit(SQLDatabaseToolkit):
             # callbacks=[human_approval_callback_handler],
         )
         query_sql_checker_tool_description = (
-            "Use this tool to check if your query is correct before executing "
-            "it. Always use this tool before executing a query with "
+            "Use this tool to check if your query is correct before executing it. "
+            "Pay close attention to single and double quotes in the query. Always use this tool before executing a query with."
             f"{query_sql_database_tool.name}!"
         )
         query_sql_checker_tool = QuerySQLCheckerTool(
@@ -59,6 +64,7 @@ class SQLBotToolkit(SQLDatabaseToolkit):
             template=QUERY_CHECKER,
         )
         return [
+            retriever_tool,
             list_tables_tool,
             table_schema_tool,
             query_sql_checker_tool,
