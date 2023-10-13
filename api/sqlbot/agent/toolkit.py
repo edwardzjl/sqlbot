@@ -23,6 +23,7 @@ class SQLBotToolkit(SQLDatabaseToolkit):
 
     def get_tools(self) -> list[BaseTool]:
         """Get the tools in the toolkit."""
+        relationship_tool = TableRelationshipTool(retriever=self.relationship_retriever)
         retriever_tool = RetrieverTool(retriever=self.query_retriever)
         list_tables_tool = CustomListTablesTool(db=self.db, redis_url=self.redis_url)
         table_schema_tool_description = (
@@ -64,6 +65,7 @@ class SQLBotToolkit(SQLDatabaseToolkit):
             template=QUERY_CHECKER,
         )
         return [
+            relationship_tool,
             retriever_tool,
             list_tables_tool,
             table_schema_tool,

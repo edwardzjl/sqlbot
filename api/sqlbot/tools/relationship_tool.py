@@ -10,7 +10,7 @@ from pydantic.v1 import root_validator
 
 class TableRelationshipTool(BaseTool):
     name = "sql_db_table_relationship"
-    description = """Use this tool to establish a comprehensive understanding of the relationship between tables. The input for this tool should be the user's question. The output is a JSON object, where the key signifies a relationship that can be utilized for the user's question, while the corresponding value represents the precise table join query."""
+    description = """Use this tool to establish a comprehensive understanding of the relationship between tables. The input for this tool should be the comma separated list of table names, where the key signifies a relationship that can be utilized for the user's question, while the corresponding value represents the precise table join query."""
     retriever: BaseRetriever
 
     @root_validator(pre=True)
@@ -22,6 +22,7 @@ class TableRelationshipTool(BaseTool):
         query: str,
         run_manager: Optional[CallbackManagerForToolRun] = None,
     ) -> List[Document]:
+        # TODO: cast input queries to list.
         docs = self.retriever.get_relevant_documents(query=query)
         result = {}
         for doc in docs:
@@ -33,8 +34,4 @@ class TableRelationshipTool(BaseTool):
         query: str,
         run_manager: Optional[CallbackManagerForToolRun] = None,
     ) -> List[Document]:
-        docs = self.retriever.get_relevant_documents(query=query)
-        result = {}
-        for doc in docs:
-            result[doc.page_content] = doc.metadata["sql_query"]
-        return result
+        return self._run(query, run_manager)
