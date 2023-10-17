@@ -16,7 +16,6 @@ from sqlbot.agent.prompts import (
 )
 from sqlbot.callbacks import (
     LCErrorCallbackHandler,
-    PersistHistoryCallbackHandler,
     StreamingFinalAnswerCallbackHandler,
     StreamingIntermediateThoughtCallbackHandler,
     TracingLLMCallbackHandler,
@@ -177,14 +176,6 @@ async def generate(
                 output_key="output",
             )
 
-            def _should_persist(tags: list) -> bool:
-                # Only require approval on sql_db_query.
-                return tags is not None and "agent_executor_chain" in tags
-
-            history_callback = PersistHistoryCallbackHandler(
-                memory=memory, should_persist=_should_persist
-            )
-
             agent_executor = create_sql_agent(
                 llm=llm,
                 toolkit=toolkit,
@@ -195,7 +186,6 @@ async def generate(
                 agent_executor_kwargs={
                     "memory": memory,
                     "return_intermediate_steps": True,
-                    "tags": ["agent_executor_chain"],
                 },
             )
 
@@ -207,7 +197,6 @@ async def generate(
                     update_conversation_callback,
                     error_callback,
                     human_approval_callback,
-                    history_callback,
                 ],
             )
         except WebSocketDisconnect:
