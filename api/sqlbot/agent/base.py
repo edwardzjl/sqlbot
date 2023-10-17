@@ -1,5 +1,6 @@
 """SQL agent."""
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Union
+from uuid import uuid4
 
 from langchain.agents.agent import AgentExecutor
 from langchain.agents.structured_chat.base import (
@@ -11,18 +12,27 @@ from langchain.agents.structured_chat.output_parser import (
 )
 from langchain.callbacks.base import BaseCallbackManager
 from langchain.chains.llm import LLMChain
+from langchain.memory.chat_memory import BaseChatMemory
 from langchain.prompts.chat import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
     SystemMessagePromptTemplate,
 )
-from langchain.schema import AgentAction, AgentFinish, BasePromptTemplate
+from langchain.schema import (
+    AgentAction,
+    AgentFinish,
+    BasePromptTemplate,
+    HumanMessage,
+    AIMessage,
+)
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.tools import BaseTool
 
 from sqlbot.agent.prompts import PREFIX, SUFFIX, FORMAT_INSTRUCTIONS
 from sqlbot.agent.toolkit import SQLBotToolkit
 from sqlbot.agent.output_parser import StripFinalAnswerPrefixStructuredChatOutputParser
+from sqlbot.schemas import IntermediateSteps
+from sqlbot.utils import utcnow
 
 
 class AppendThoughtAgent(StructuredChatAgent):
@@ -121,6 +131,16 @@ class AppendThoughtAgent(StructuredChatAgent):
 
 
 class CustomAgentExecutor(AgentExecutor):
+    def prep_inputs(self, inputs: Union[Dict[str, Any], Any]) -> Dict[str, str]:
+        inputs = super().prep_inputs(inputs)
+        if self.memory is not None and isinstance(self.memory, BaseChatMemory):
+            msg = HumanMessage(
+                content=inputs[self.memory.input_key],
+                additional_kwargs={"id": uuid4().hex, "sent_at": utcnow().isoformat()},
+            )
+            self.memory.chat_memory.add_message(msg)
+        return inputs
+
     def prep_outputs(
         self,
         inputs: Dict[str, str],
@@ -129,8 +149,16 @@ class CustomAgentExecutor(AgentExecutor):
     ) -> Dict[str, str]:
         """disable persist history"""
         self._validate_outputs(outputs)
-        # if self.memory is not None:
-        # self.memory.save_context(inputs, outputs)
+        if self.memory is not None and isinstance(self.memory, BaseChatMemory):
+            additional_kwargs = {"id": uuid4().hex, "sent_at": utcnow().isoformat()}
+            if "intermediate_steps" in outputs:
+                wrap = IntermediateSteps.model_validate(outputs["intermediate_steps"])
+                additional_kwargs["intermediate_steps"] = wrap.model_dump_json()
+            msg = AIMessage(
+                content=outputs[self.memory.output_key],
+                additional_kwargs=additional_kwargs,
+            )
+            self.memory.chat_memory.add_message(msg)
         if return_only_outputs:
             return outputs
         else:
