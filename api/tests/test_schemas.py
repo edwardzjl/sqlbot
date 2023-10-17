@@ -19,7 +19,13 @@ class TestIntermediateStep(unittest.TestCase):
         step = IntermediateStep.model_validate(_obj)
         action = step[0]
         self.assertDictEqual(
-            action, {"tool": "some_tool", "tool_input": "some_input", "log": "some log"}
+            action,
+            {
+                "type": "AgentAction",
+                "tool": "some_tool",
+                "tool_input": "some_input",
+                "log": "some log",
+            },
         )
         observation = step[1]
         self.assertEqual(observation, "baz")
@@ -34,7 +40,12 @@ class TestIntermediateStep(unittest.TestCase):
         self.assertListEqual(
             step.model_dump(),
             [
-                {"tool": "some_tool", "tool_input": "some_input", "log": "some log"},
+                {
+                    "type": "AgentAction",
+                    "tool": "some_tool",
+                    "tool_input": "some_input",
+                    "log": "some log",
+                },
                 "baz",
             ],
         )
@@ -46,7 +57,12 @@ class TestIntermediateStep(unittest.TestCase):
         step = IntermediateStep.model_validate_json(step_str)
         action = step[0]
         self.assertDictEqual(
-            action, {"tool": "some_tool", "tool_input": "some_input", "log": "some log"}
+            action,
+            {
+                "tool": "some_tool",
+                "tool_input": "some_input",
+                "log": "some log",
+            },
         )
         observation = step[1]
         self.assertEqual(observation, "baz")
@@ -60,7 +76,7 @@ class TestIntermediateStep(unittest.TestCase):
         )
         self.assertEqual(
             step.model_dump_json(),
-            '[{"tool":"some_tool","tool_input":"some_input","log":"some log"},"baz"]',
+            '[{"tool":"some_tool","tool_input":"some_input","log":"some log","type":"AgentAction"},"baz"]',
         )
 
 
@@ -77,7 +93,12 @@ class TestIntermediateSteps(unittest.TestCase):
         step = steps[0]  # IntermediateStep
         self.assertDictEqual(
             step[0],
-            {"tool": "some_tool", "tool_input": "some_input", "log": "some log"},
+            {
+                "type": "AgentAction",
+                "tool": "some_tool",
+                "tool_input": "some_input",
+                "log": "some log",
+            },
         )
         self.assertEqual(step[1], "baz")
 
@@ -90,7 +111,11 @@ class TestIntermediateSteps(unittest.TestCase):
         step = steps[0]  # IntermediateStep
         self.assertDictEqual(
             step[0],
-            {"tool": "some_tool", "tool_input": "some_input", "log": "some log"},
+            {
+                "tool": "some_tool",
+                "tool_input": "some_input",
+                "log": "some log",
+            },
         )
         self.assertEqual(step[1], "baz")
 
@@ -110,6 +135,7 @@ class TestIntermediateSteps(unittest.TestCase):
             [
                 [
                     {
+                        "type": "AgentAction",
                         "tool": "some_tool",
                         "tool_input": "some_input",
                         "log": "some log",
@@ -132,7 +158,7 @@ class TestIntermediateSteps(unittest.TestCase):
         )
         self.assertEqual(
             steps.model_dump_json(),
-            '[[{"tool":"some_tool","tool_input":"some_input","log":"some log"},"baz"]]',
+            '[[{"tool":"some_tool","tool_input":"some_input","log":"some log","type":"AgentAction"},"baz"]]',
         )
 
 
