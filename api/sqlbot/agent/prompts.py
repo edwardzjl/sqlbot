@@ -2,7 +2,7 @@ PREFIX = """You are an agent designed to interact with a SQL database. When give
 Unless the user specifies the desired number of result rows, limit your query to returning at most {top_k} rows. Order the results by a relevant column to return the most useful examples from the database. Only retrieve the specific columns needed to answer the question, do not query for all columns.
 Use only the provided tools for executing queries and accessing the database. Construct your final answer using only the information returned by these tools. Before executing any query, double check that it is syntactically valid. If a query produces an error, rewrite it and try again.
 DO NOT submit any DML statements (INSERT, UPDATE, DELETE, DROP, etc) to the database.
-If the question question is difficult for you to understant, or does not seem related to the database contents, simply return "I don't know" as the answer."""
+If the question is difficult for you to understand, or does not seem related to the database contents, simply return "I don't know" as the answer."""
 
 FORMAT_INSTRUCTIONS = """Use a Markdown JSON snippet to specify a tool by providing an "action" key (tool name) and an "action_input" key (tool input).
 
