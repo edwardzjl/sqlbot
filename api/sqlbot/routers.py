@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from langchain.llms import HuggingFaceTextGenInference
-from langchain.memory import ConversationBufferWindowMemory
+from langchain.memory import RedisChatMessageHistory
 from langchain.prompts import MessagesPlaceholder
 from langchain.sql_database import SQLDatabase
 from loguru import logger
@@ -23,7 +23,7 @@ from sqlbot.callbacks import (
     WebsocketHumanApprovalCallbackHandler,
 )
 from sqlbot.config import settings
-from sqlbot.history import AppendSuffixHistory
+from sqlbot.memory import FlexConversationBufferWindowMemory
 from sqlbot.models import Conversation as ORMConversation
 from sqlbot.schemas import (
     ChatMessage,
@@ -77,10 +77,8 @@ async def get_conversation(
     userid: Annotated[str | None, UserIdHeader()] = None,
 ):
     conv = await ORMConversation.get(conversation_id)
-    history = AppendSuffixHistory(
+    history = RedisChatMessageHistory(
         url=str(settings.redis_om_url),
-        user_suffix=HUMAN_SUFFIX,
-        ai_suffix=AI_SUFFIX,
         session_id=f"{userid}:{conversation_id}",
     )
     return ConversationDetail(
@@ -160,15 +158,15 @@ async def generate(
                 conversation_id=message.conversation,
             )
 
-            history = AppendSuffixHistory(
+            history = RedisChatMessageHistory(
                 url=str(settings.redis_om_url),
-                user_suffix=HUMAN_SUFFIX,
-                ai_suffix=AI_SUFFIX,
                 session_id=f"{userid}:{message.conversation}",
             )
-            memory = ConversationBufferWindowMemory(
+            memory = FlexConversationBufferWindowMemory(
                 human_prefix=HUMAN_PREFIX,
                 ai_prefix=AI_PREFIX,
+                user_suffix=HUMAN_SUFFIX,
+                ai_suffix=AI_SUFFIX,
                 memory_key="history",
                 chat_memory=history,
                 return_messages=True,
