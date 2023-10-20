@@ -51,7 +51,7 @@ llm = HuggingFaceTextGenInference(
 )
 
 coder_llm = HuggingFaceTextGenInference(
-    inference_server_url=str(settings.isvc_coder_llm),
+    inference_server_url=str(settings.isvc_llm),
     max_new_tokens=512,
     temperature=0.1,
     typical_p=None,
