@@ -4,8 +4,6 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     isvc_llm: AnyHttpUrl = "http://localhost:8080"
-    isvc_coder_llm: AnyHttpUrl = "http://localhost:8081"
-    """LLM used for generating code especially SQL"""
     log_level: str = "INFO"
     redis_om_url: RedisDsn = "redis://localhost:6379"
     warehouse_url: PostgresDsn = (
