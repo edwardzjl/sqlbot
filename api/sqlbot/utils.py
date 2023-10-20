@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import Header
 
@@ -17,7 +17,3 @@ def utcnow():
     datetime.datetime.utcnow() does not contain timezone information.
     """
     return datetime.now(timezone.utc)
-
-
-def _default_true(_: Any) -> bool:
-    return True

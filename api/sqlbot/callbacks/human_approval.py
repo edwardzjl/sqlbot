@@ -4,11 +4,8 @@ from uuid import UUID
 from fastapi import WebSocket
 import sqlparse
 
-# from langchain.callbacks.human import HumanApprovalCallbackHandler
-
 from sqlbot.callbacks.base import WebsocketCallbackHandler
 from sqlbot.schemas import ChatMessage
-from sqlbot.utils import _default_true
 
 
 class WebsocketHumanApprovalCallbackHandler(WebsocketCallbackHandler):
@@ -18,7 +15,7 @@ class WebsocketHumanApprovalCallbackHandler(WebsocketCallbackHandler):
         self,
         websocket: WebSocket,
         conversation_id: str,
-        should_check: Callable[[dict[str, Any]], bool] = _default_true,
+        should_check: Callable[[dict[str, Any]], bool] = lambda _: True,
     ):
         super().__init__(websocket, conversation_id)
         self._should_check = should_check
