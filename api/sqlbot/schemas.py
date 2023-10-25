@@ -3,13 +3,7 @@ from typing import Any, Optional
 from uuid import UUID, uuid4
 
 from langchain.schema import AgentAction, BaseMessage
-from pydantic import (
-    model_validator,
-    ConfigDict,
-    BaseModel,
-    RootModel,
-    Field,
-)
+from pydantic import BaseModel, ConfigDict, Field, RootModel, model_validator
 
 from sqlbot.utils import utcnow
 

@@ -6,8 +6,8 @@ from langchain.tools.sql_database.tool import QuerySQLCheckerTool
 from pydantic import RedisDsn
 
 from sqlbot.tools import (
-    CustomTableSchemaTool,
     CustomListTablesTool,
+    CustomTableSchemaTool,
     FakeAsyncQuerySQLDataBaseTool,
 )
 from sqlbot.tools.prompt import QUERY_CHECKER

@@ -2,7 +2,6 @@ from typing import Any, Optional
 
 from langchain.callbacks.manager import CallbackManagerForToolRun
 from langchain.tools.sql_database.tool import InfoSQLDatabaseTool
-
 from pydantic import RedisDsn
 from pydantic.v1 import root_validator
 
