@@ -7,13 +7,8 @@ from langchain.prompts import MessagesPlaceholder
 from langchain.sql_database import SQLDatabase
 from loguru import logger
 
-from sqlbot.agent import create_sql_agent, SQLBotToolkit
-from sqlbot.agent.prompts import (
-    HUMAN_PREFIX,
-    AI_PREFIX,
-    HUMAN_SUFFIX,
-    AI_SUFFIX,
-)
+from sqlbot.agent import SQLBotToolkit, create_sql_agent
+from sqlbot.agent.prompts import AI_PREFIX, AI_SUFFIX, HUMAN_PREFIX, HUMAN_SUFFIX
 from sqlbot.callbacks import (
     LCErrorCallbackHandler,
     StreamingFinalAnswerCallbackHandler,
@@ -27,12 +22,11 @@ from sqlbot.memory import FlexConversationBufferWindowMemory
 from sqlbot.models import Conversation as ORMConversation
 from sqlbot.schemas import (
     ChatMessage,
-    ConversationDetail,
     Conversation,
+    ConversationDetail,
     UpdateConversation,
 )
 from sqlbot.utils import UserIdHeader, utcnow
-
 
 router = APIRouter(
     prefix="/api",

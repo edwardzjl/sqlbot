@@ -4,8 +4,8 @@ from uuid import uuid4
 
 from langchain.agents.agent import AgentExecutor
 from langchain.agents.structured_chat.base import (
-    StructuredChatAgent,
     HUMAN_MESSAGE_TEMPLATE,
+    StructuredChatAgent,
 )
 from langchain.agents.structured_chat.output_parser import (
     StructuredChatOutputParserWithRetries,
@@ -21,16 +21,16 @@ from langchain.prompts.chat import (
 from langchain.schema import (
     AgentAction,
     AgentFinish,
+    AIMessage,
     BasePromptTemplate,
     HumanMessage,
-    AIMessage,
 )
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.tools import BaseTool
 
-from sqlbot.agent.prompts import PREFIX, SUFFIX, FORMAT_INSTRUCTIONS
-from sqlbot.agent.toolkit import SQLBotToolkit
 from sqlbot.agent.output_parser import StripFinalAnswerPrefixStructuredChatOutputParser
+from sqlbot.agent.prompts import FORMAT_INSTRUCTIONS, PREFIX, SUFFIX
+from sqlbot.agent.toolkit import SQLBotToolkit
 from sqlbot.schemas import IntermediateSteps
 from sqlbot.utils import utcnow
 

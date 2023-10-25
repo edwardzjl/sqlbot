@@ -1,8 +1,8 @@
 from typing import Any, Callable, Optional
 from uuid import UUID
 
-from fastapi import WebSocket
 import sqlparse
+from fastapi import WebSocket
 
 from sqlbot.callbacks.base import WebsocketCallbackHandler
 from sqlbot.schemas import ChatMessage

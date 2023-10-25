@@ -1,8 +1,8 @@
 from typing import Any, Optional
 from uuid import UUID
 
-from langchain.schema.agent import AgentFinish
 from langchain.callbacks.base import AsyncCallbackHandler
+from langchain.schema.agent import AgentFinish
 
 from sqlbot.models import Conversation
 from sqlbot.utils import utcnow
