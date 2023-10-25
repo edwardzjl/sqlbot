@@ -4,9 +4,11 @@ all: help
 
 lint:
 	black . --check
+	isort . --check
 
 format:
 	black .
+	isort .
 
 test:
 	python -m unittest

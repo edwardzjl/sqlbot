@@ -31,8 +31,8 @@ jobs:
           cache: 'pip' # caching pip dependencies
       - name: Install Dependencies
         run: pip install -r requirements.txt
-      - name: Install Black
-        run: pip install "black"
+      - name: Install format tools
+        run: pip install black isort
       - name: Lint
         run: make lint
 
