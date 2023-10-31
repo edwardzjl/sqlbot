@@ -1,4 +1,4 @@
-fastapi==0.104.0
+fastapi==0.104.1
 langchain==0.0.326
 loguru==0.7.2
 # redis-om 0.2.1 requires pydantic<2.1.0
