@@ -1,4 +1,0 @@
-black
-bumpver
-isort
-psycopg[binary]

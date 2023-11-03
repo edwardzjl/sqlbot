@@ -3,15 +3,15 @@
 all: help
 
 lint:
-	black . --check
-	isort . --check
+	pipenv run black . --check
+	pipenv run isort . --check
 
 format:
-	black .
-	isort .
+	pipenv run black .
+	pipenv run isort .
 
 test:
-	python -m unittest
+	pipenv run python -m unittest
 
 ######################
 # HELP
