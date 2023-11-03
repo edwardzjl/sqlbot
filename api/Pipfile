@@ -1,0 +1,32 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = "~=0.100"
+langchain = "~=0.0.300"
+loguru = "~=0.7"
+# redis-om 0.2.1 requires pydantic<2.1.0
+pydantic = "~=2.0.0"
+pydantic-settings = "~=2.0.0"
+# redis-om 0.2.1 requires redis<5.0.0
+redis = {extras = ["hiredis"], version = "~=4.6.0"}
+redis-om = "~=0.2.1"
+requests = "~=2.31.0"
+sqlalchemy = "~=2.0.22"
+sqlparse = "~=0.4.4"
+text-generation = "~=0.6.1"
+uvicorn = {extras = ["standard"], version = "~=0.23.2"}
+websockets = "~=12.0"
+
+[dev-packages]
+black = "*"
+isort = "*"
+psycopg = {extras = ["binary"], version = "~=3.1.12"}
+
+[prod-packages]
+psycopg = {extras = ["c"], version = "~=3.1.12"}
+
+[requires]
+python_version = "3.11"
