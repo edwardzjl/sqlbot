@@ -52,8 +52,6 @@ coder_llm = HuggingFaceTextGenInference(
     stop_sequences=["</s>"],
 )
 
-history_prompt = MessagesPlaceholder(variable_name="history")
-
 db = SQLDatabase.from_uri(str(settings.warehouse_url), sample_rows_in_table_info=3)
 
 
@@ -173,7 +171,6 @@ async def generate(
                 toolkit=toolkit,
                 top_k=5,
                 max_iterations=10,
-                memory_prompts=[history_prompt],
                 input_variables=["input", "agent_scratchpad", "history"],
                 agent_executor_kwargs={
                     "memory": memory,
