@@ -16,6 +16,7 @@ from langchain.memory.chat_memory import BaseChatMemory
 from langchain.prompts.chat import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
+    MessagesPlaceholder,
     SystemMessagePromptTemplate,
 )
 from langchain.schema import (
@@ -45,7 +46,6 @@ class AppendThoughtAgent(StructuredChatAgent):
         human_message_template: str = HUMAN_MESSAGE_TEMPLATE,
         format_instructions: str = FORMAT_INSTRUCTIONS,
         input_variables: Optional[List[str]] = None,
-        memory_prompts: Optional[List[BasePromptTemplate]] = None,
     ) -> BasePromptTemplate:
         tool_strings = "\n".join(
             [f"> {tool.name}: {tool.description}" for tool in tools]
@@ -55,10 +55,9 @@ class AppendThoughtAgent(StructuredChatAgent):
         template = "\n\n".join([prefix, tool_strings, format_instructions, suffix])
         if input_variables is None:
             input_variables = ["input", "agent_scratchpad"]
-        _memory_prompts = memory_prompts or []
         messages = [
             SystemMessagePromptTemplate.from_template(template),
-            *_memory_prompts,
+            MessagesPlaceholder(variable_name="history"),
             HumanMessagePromptTemplate.from_template(human_message_template),
         ]
         return ChatPromptTemplate(input_variables=input_variables, messages=messages)
@@ -176,7 +175,6 @@ def create_sql_agent(
     early_stopping_method: str = "force",
     verbose: bool = False,
     agent_executor_kwargs: Optional[Dict[str, Any]] = None,
-    memory_prompts: Optional[List[BasePromptTemplate]] = None,
     **kwargs: Dict[str, Any],
 ) -> AgentExecutor:
     """Construct an SQL agent from an LLM and tools."""
@@ -190,7 +188,6 @@ def create_sql_agent(
         suffix=suffix,
         format_instructions=FORMAT_INSTRUCTIONS,
         input_variables=input_variables,
-        memory_prompts=memory_prompts,
     )
     llm_chain = LLMChain(
         llm=llm,
