@@ -2,13 +2,9 @@
 
 from langchain.agents.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from langchain.tools import BaseTool
-from langchain.tools.sql_database.tool import QuerySQLCheckerTool
+from langchain.tools.sql_database.tool import InfoSQLDatabaseTool, QuerySQLCheckerTool
 
-from sqlbot.tools import (
-    CustomListTablesTool,
-    CustomTableSchemaTool,
-    FakeAsyncQuerySQLDataBaseTool,
-)
+from sqlbot.tools import CustomListTablesTool, FakeAsyncQuerySQLDataBaseTool
 from sqlbot.tools.prompt import QUERY_CHECKER
 
 
@@ -27,10 +23,9 @@ class SQLBotToolkit(SQLDatabaseToolkit):
             f"{list_tables_tool.name} first! "
             "Example Input: 'table1, table2, table3'"
         )
-        table_schema_tool = CustomTableSchemaTool(
+        table_schema_tool = InfoSQLDatabaseTool(
             db=self.db,
             description=table_schema_tool_description,
-            redis_url=self.redis_url,
         )
         query_sql_database_tool_description = (
             "Use this tool to execute query and get result from the database. "
