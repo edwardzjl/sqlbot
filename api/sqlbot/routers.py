@@ -1,10 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from langchain.llms import HuggingFaceTextGenInference
 from langchain.memory import RedisChatMessageHistory
-from langchain.prompts import MessagesPlaceholder
-from langchain.sql_database import SQLDatabase
 from loguru import logger
 
 from sqlbot.agent import SQLBotToolkit, create_sql_agent
@@ -13,7 +10,6 @@ from sqlbot.callbacks import (
     LCErrorCallbackHandler,
     StreamingFinalAnswerCallbackHandler,
     StreamingIntermediateThoughtCallbackHandler,
-    TracingLLMCallbackHandler,
     UpdateConversationCallbackHandler,
     WebsocketHumanApprovalCallbackHandler,
 )
@@ -26,33 +22,13 @@ from sqlbot.schemas import (
     ConversationDetail,
     UpdateConversation,
 )
+from sqlbot.state import app_state
 from sqlbot.utils import UserIdHeader, utcnow
 
 router = APIRouter(
     prefix="/api",
     tags=["conversation"],
 )
-
-tracing_callback = TracingLLMCallbackHandler()
-llm = HuggingFaceTextGenInference(
-    inference_server_url=str(settings.isvc_llm),
-    max_new_tokens=512,
-    temperature=0.1,
-    typical_p=None,
-    stop_sequences=["</s>", "Observation", "Thought"],
-    streaming=True,
-    callbacks=[tracing_callback],
-)
-
-coder_llm = HuggingFaceTextGenInference(
-    inference_server_url=str(settings.isvc_llm),
-    max_new_tokens=512,
-    temperature=0.1,
-    typical_p=None,
-    stop_sequences=["</s>"],
-)
-
-db = SQLDatabase.from_uri(str(settings.warehouse_url), sample_rows_in_table_info=3)
 
 
 @router.get("/conversations", response_model=list[Conversation])
@@ -144,8 +120,8 @@ async def generate(
             )
 
             toolkit = SQLBotToolkit(
-                db=db,
-                llm=coder_llm,
+                db=app_state.warehouse,
+                llm=app_state.coder_llm,
                 redis_url=str(settings.redis_om_url),
                 conversation_id=message.conversation,
             )
@@ -167,7 +143,7 @@ async def generate(
             )
 
             agent_executor = create_sql_agent(
-                llm=llm,
+                llm=app_state.llm,
                 toolkit=toolkit,
                 top_k=5,
                 max_iterations=10,

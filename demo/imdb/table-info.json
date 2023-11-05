@@ -1,0 +1,9 @@
+{
+    "actors": "CREATE TABLE actors (\n\tid int,\n\tfirst_name text,\n\tlast_name text,\n\tgender text\n)",
+    "directors": "CREATE TABLE directors (\n\tid int,\n\tfirst_name text,\n\tlast_name text\n)",
+    "directors_genres": "CREATE TABLE directors_genres (\n\tdirector_id int,\n\tgenre text,\n\tprob float\n)",
+    "movies": "CREATE TABLE movies (\n\tid int,\n\tname text,\n\tyear int,\n\trank float\n)",
+    "movies_directors": "CREATE TABLE movies_directors (\n\tdirector_id int,\n\tmovie_id int\n)",
+    "movies_genres": "CREATE TABLE movies_genres (\n\tmovie_id int,\n\tgenre text\n)",
+    "roles": "CREATE TABLE roles (\n\tactor_id int,\n\tmovie_id int,\n\t\"role\" text\n)"
+}
