@@ -46,18 +46,18 @@ async def lifespan(app: FastAPI):
     app_state.llm = HuggingFaceTextGenInference(
         inference_server_url=str(settings.isvc_llm),
         max_new_tokens=512,
-        temperature=0.1,
+        temperature=0.8,
         top_p=0.8,
-        stop_sequences=["</s>", "Observation", "Thought"],
+        stop_sequences=["<|im_end|>"],
         streaming=True,
         callbacks=[tracing_callback],
     )
     app_state.coder_llm = HuggingFaceTextGenInference(
         inference_server_url=str(settings.isvc_llm),
         max_new_tokens=512,
-        temperature=0.1,
+        temperature=0.8,
         top_p=0.8,
-        stop_sequences=["</s>"],
+        stop_sequences=["<|im_end|>"],
     )
     end = time.perf_counter()
     logger.info(f"App initialized in {(end - start):.4}s")

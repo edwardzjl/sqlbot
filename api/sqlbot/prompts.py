@@ -33,7 +33,7 @@ class ChatMLPromptValue(ChatPromptValue):
 
     def to_string(self) -> str:
         """Return prompt as string."""
-        return f"{get_buffer_string(self.messages)}\n<|im_start|>assistant\n"
+        return f"{get_buffer_string(self.messages)}\n<|im_start|>assistant\n```json\n"
 
     def to_messages(self) -> list[BaseMessage]:
         """Return prompt as a list of messages."""

@@ -21,7 +21,7 @@ class SQLBotToolkit(SQLDatabaseToolkit):
             "schema and sample rows for those tables. "
             "Be sure that the tables actually exist by calling "
             f"{list_tables_tool.name} first! "
-            "Example Input: 'table1, table2, table3'"
+            "Example Input: table1, table2, table3"
         )
         table_schema_tool = InfoSQLDatabaseTool(
             db=self.db,

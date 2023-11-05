@@ -1,12 +1,10 @@
 """SQL agent."""
+import json
 from typing import Any, Dict, List, Optional, Sequence, Union
 from uuid import uuid4
 
 from langchain.agents.agent import AgentExecutor
-from langchain.agents.structured_chat.base import (
-    HUMAN_MESSAGE_TEMPLATE,
-    StructuredChatAgent,
-)
+from langchain.agents.conversational_chat.base import ConversationalChatAgent
 from langchain.agents.structured_chat.output_parser import (
     StructuredChatOutputParserWithRetries,
 )
@@ -14,7 +12,6 @@ from langchain.callbacks.base import BaseCallbackManager
 from langchain.chains.llm import LLMChain
 from langchain.memory.chat_memory import BaseChatMemory
 from langchain.prompts.chat import (
-    ChatPromptTemplate,
     HumanMessagePromptTemplate,
     MessagesPlaceholder,
     SystemMessagePromptTemplate,
@@ -23,62 +20,89 @@ from langchain.schema import (
     AgentAction,
     AgentFinish,
     AIMessage,
+    BaseMessage,
     BasePromptTemplate,
     HumanMessage,
+    SystemMessage,
 )
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.tools import BaseTool
 
 from sqlbot.agent.output_parser import StripFinalAnswerPrefixStructuredChatOutputParser
-from sqlbot.agent.prompts import FORMAT_INSTRUCTIONS, PREFIX, SUFFIX
+from sqlbot.agent.prompts import (
+    AI_PREFIX,
+    AI_SUFFIX,
+    INSTRUCTION,
+    OBSERVATION_PREFIX,
+    OBSERVATION_SUFFIX,
+)
 from sqlbot.agent.toolkit import SQLBotToolkit
+from sqlbot.prompts import ChatMLPromptTemplate
 from sqlbot.schemas import IntermediateSteps
 from sqlbot.utils import utcnow
 
 
-class AppendThoughtAgent(StructuredChatAgent):
+class AppendThoughtAgent(ConversationalChatAgent):
     @classmethod
     def create_prompt(
         cls,
         tools: Sequence[BaseTool],
-        prefix: str = PREFIX,
-        suffix: str = SUFFIX,
-        human_message_template: str = HUMAN_MESSAGE_TEMPLATE,
-        format_instructions: str = FORMAT_INSTRUCTIONS,
         input_variables: Optional[List[str]] = None,
     ) -> BasePromptTemplate:
         tool_strings = "\n".join(
-            [f"> {tool.name}: {tool.description}" for tool in tools]
+            [f"- {tool.name}: {tool.description}" for tool in tools]
         )
         tool_names = ", ".join([tool.name for tool in tools])
-        format_instructions = format_instructions.format(tool_names=tool_names)
-        template = "\n\n".join([prefix, tool_strings, format_instructions, suffix])
+        system_prompt = INSTRUCTION.format(
+            tool_names=tool_names,
+            tool_description=tool_strings,
+        )
         if input_variables is None:
             input_variables = ["input", "agent_scratchpad"]
         messages = [
-            SystemMessagePromptTemplate.from_template(template),
+            SystemMessagePromptTemplate.from_template(system_prompt),
             MessagesPlaceholder(variable_name="history"),
-            HumanMessagePromptTemplate.from_template(human_message_template),
+            HumanMessagePromptTemplate.from_template("{input}"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
-        return ChatPromptTemplate(input_variables=input_variables, messages=messages)
+        return ChatMLPromptTemplate(input_variables=input_variables, messages=messages)
+
+    @property
+    def observation_prefix(self) -> str:
+        """Prefix to append the observation with."""
+        return f"{OBSERVATION_PREFIX}\n"
+
+    @property
+    def observation_suffix(self) -> str:
+        """Suffix to append the observation with."""
+        return OBSERVATION_SUFFIX
+
+    @property
+    def llm_prefix(self) -> str:
+        """Prefix to append the llm call with."""
+        return f"{AI_PREFIX}\n"
+
+    @property
+    def _stop(self) -> List[str]:
+        return [AI_SUFFIX]
 
     def _construct_scratchpad(
-        self, intermediate_steps: List[tuple[AgentAction, str]]
-    ) -> str:
-        agent_scratchpad = super(StructuredChatAgent, self)._construct_scratchpad(
-            intermediate_steps
-        )
-        # agent_scratchpad = Agent._construct_scratchpad(intermediate_steps)
-        if not isinstance(agent_scratchpad, str):
-            raise ValueError("agent_scratchpad should be of type string.")
-        if agent_scratchpad:
-            return (
-                f"This was your previous work "
-                f"(but I haven't seen any of it! I only see what "
-                f"you return as final answer):\n{self.llm_prefix}{agent_scratchpad}"
-            )
-        else:
-            return self.llm_prefix
+        self, intermediate_steps: list[tuple[AgentAction, str]]
+    ) -> List[BaseMessage]:
+        """Construct the scratchpad that lets the agent continue its thought process."""
+        thoughts = []
+        for action, observation in intermediate_steps:
+            action_taken = {
+                "tool_name": action.tool,
+                "tool_input": action.tool_input,
+            }
+            thoughts.append(AIMessage(content=json.dumps(action_taken)))
+            system_observation = SystemMessage(content=observation)
+            # human_message = HumanMessage(
+                # content=self.template_tool_response.format(observation=observation)
+            # )
+            thoughts.append(system_observation)
+        return thoughts
 
     def return_stopped_response(
         self,
@@ -179,14 +203,9 @@ def create_sql_agent(
 ) -> AgentExecutor:
     """Construct an SQL agent from an LLM and tools."""
     tools = toolkit.get_tools()
-    prefix = PREFIX.format(dialect=toolkit.dialect, top_k=top_k)
-    suffix = SUFFIX.format(dialect=toolkit.dialect)
 
     prompt = AppendThoughtAgent.create_prompt(
         tools,
-        prefix=prefix,
-        suffix=suffix,
-        format_instructions=FORMAT_INSTRUCTIONS,
         input_variables=input_variables,
     )
     llm_chain = LLMChain(
