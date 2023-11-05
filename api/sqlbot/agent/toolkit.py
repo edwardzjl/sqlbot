@@ -3,7 +3,6 @@
 from langchain.agents.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from langchain.tools import BaseTool
 from langchain.tools.sql_database.tool import QuerySQLCheckerTool
-from pydantic import RedisDsn
 
 from sqlbot.tools import (
     CustomListTablesTool,
