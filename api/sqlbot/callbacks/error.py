@@ -1,4 +1,4 @@
-from typing import Any, Optional, Union
+from typing import Any, Optional
 from uuid import UUID
 
 from sqlbot.callbacks.base import WebsocketCallbackHandler
@@ -8,7 +8,7 @@ from sqlbot.schemas import ChatMessage
 class LCErrorCallbackHandler(WebsocketCallbackHandler):
     async def on_llm_error(
         self,
-        error: Union[Exception, KeyboardInterrupt],
+        error: Exception | KeyboardInterrupt,
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
@@ -27,7 +27,7 @@ class LCErrorCallbackHandler(WebsocketCallbackHandler):
 
     async def on_chain_error(
         self,
-        error: Union[Exception, KeyboardInterrupt],
+        error: Exception | KeyboardInterrupt,
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
@@ -46,7 +46,7 @@ class LCErrorCallbackHandler(WebsocketCallbackHandler):
 
     async def on_tool_error(
         self,
-        error: Union[Exception, KeyboardInterrupt],
+        error: Exception | KeyboardInterrupt,
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
@@ -65,7 +65,7 @@ class LCErrorCallbackHandler(WebsocketCallbackHandler):
 
     async def on_retriever_error(
         self,
-        error: Union[Exception, KeyboardInterrupt],
+        error: Exception | KeyboardInterrupt,
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,

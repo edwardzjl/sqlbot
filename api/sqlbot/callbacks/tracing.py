@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 from uuid import UUID
 
 from langchain.callbacks.base import AsyncCallbackHandler
@@ -29,7 +29,7 @@ class TracingLLMCallbackHandler(AsyncCallbackHandler):
         self,
         token: str,
         *,
-        chunk: Optional[Union[GenerationChunk, ChatGenerationChunk]] = None,
+        chunk: Optional[GenerationChunk | ChatGenerationChunk] = None,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
         tags: Optional[list[str]] = None,
@@ -56,7 +56,7 @@ class TracingLLMCallbackHandler(AsyncCallbackHandler):
 
     async def on_llm_error(
         self,
-        error: Union[Exception, KeyboardInterrupt],
+        error: Exception | KeyboardInterrupt,
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,

@@ -1,5 +1,5 @@
 """SQL agent."""
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Optional, Sequence
 from uuid import uuid4
 
 from langchain.agents.agent import AgentExecutor
@@ -39,7 +39,7 @@ class AppendThoughtAgent(StructuredChatAgent):
         suffix: str = SUFFIX,
         human_message_template: str = HUMAN_MESSAGE_TEMPLATE,
         format_instructions: str = FORMAT_INSTRUCTIONS,
-        input_variables: Optional[List[str]] = None,
+        input_variables: Optional[list[str]] = None,
     ) -> BasePromptTemplate:
         tool_strings = "\n".join(
             [f"> {tool.name}: {tool.description}" for tool in tools]
@@ -57,7 +57,7 @@ class AppendThoughtAgent(StructuredChatAgent):
         return ChatPromptTemplate(input_variables=input_variables, messages=messages)
 
     def _construct_scratchpad(
-        self, intermediate_steps: List[tuple[AgentAction, str]]
+        self, intermediate_steps: list[tuple[AgentAction, str]]
     ) -> str:
         agent_scratchpad = super(StructuredChatAgent, self)._construct_scratchpad(
             intermediate_steps
@@ -77,7 +77,7 @@ class AppendThoughtAgent(StructuredChatAgent):
     def return_stopped_response(
         self,
         early_stopping_method: str,
-        intermediate_steps: List[tuple[AgentAction, str]],
+        intermediate_steps: list[tuple[AgentAction, str]],
         **kwargs: Any,
     ) -> AgentFinish:
         """Return response when agent has been stopped due to max iterations."""
@@ -124,7 +124,7 @@ class AppendThoughtAgent(StructuredChatAgent):
 
 
 class CustomAgentExecutor(AgentExecutor):
-    def prep_inputs(self, inputs: Union[Dict[str, Any], Any]) -> Dict[str, str]:
+    def prep_inputs(self, inputs: dict[str, Any] | Any) -> dict[str, str]:
         inputs = super().prep_inputs(inputs)
         if self.memory is not None and isinstance(self.memory, BaseChatMemory):
             self.memory.chat_memory.add_user_message(inputs[self.memory.input_key])
@@ -132,10 +132,10 @@ class CustomAgentExecutor(AgentExecutor):
 
     def prep_outputs(
         self,
-        inputs: Dict[str, str],
-        outputs: Dict[str, str],
+        inputs: dict[str, str],
+        outputs: dict[str, str],
         return_only_outputs: bool = False,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """disable persist history"""
         self._validate_outputs(outputs)
         if self.memory is not None and isinstance(self.memory, BaseChatMemory):
@@ -158,14 +158,14 @@ def create_sql_agent(
     llm: BaseLanguageModel,
     toolkit: SQLBotToolkit,
     callback_manager: Optional[BaseCallbackManager] = None,
-    input_variables: Optional[List[str]] = None,
+    input_variables: Optional[list[str]] = None,
     top_k: int = 10,
     max_iterations: Optional[int] = 15,
     max_execution_time: Optional[float] = None,
     early_stopping_method: str = "force",
     verbose: bool = False,
-    agent_executor_kwargs: Optional[Dict[str, Any]] = None,
-    **kwargs: Dict[str, Any],
+    agent_executor_kwargs: Optional[dict[str, Any]] = None,
+    **kwargs: dict[str, Any],
 ) -> AgentExecutor:
     """Construct an SQL agent from an LLM and tools."""
     tools = toolkit.get_tools()
