@@ -14,6 +14,7 @@ from sqlbot.callbacks import (
     WebsocketHumanApprovalCallbackHandler,
 )
 from sqlbot.config import settings
+from sqlbot.history import CustomRedisChatMessageHistory
 from sqlbot.memory import FlexConversationBufferWindowMemory
 from sqlbot.models import Conversation as ORMConversation
 from sqlbot.schemas import (
@@ -126,7 +127,7 @@ async def generate(
                 conversation_id=message.conversation,
             )
 
-            history = RedisChatMessageHistory(
+            history = CustomRedisChatMessageHistory(
                 url=str(settings.redis_om_url),
                 session_id=f"{userid}:{message.conversation}",
             )
