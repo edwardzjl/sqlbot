@@ -1,6 +1,5 @@
 import json
 import re
-from typing import Union
 
 from langchain.agents.structured_chat.output_parser import StructuredChatOutputParser
 from langchain.schema import AgentAction, AgentFinish, OutputParserException
@@ -17,7 +16,7 @@ class StripFinalAnswerPrefixStructuredChatOutputParser(StructuredChatOutputParse
     def get_format_instructions(self) -> str:
         return FORMAT_INSTRUCTIONS
 
-    def parse(self, text: str) -> Union[AgentAction, AgentFinish]:
+    def parse(self, text: str) -> AgentAction | AgentFinish:
         # Sometimes LLM will continue to generate Observation after action.
         # It will interfere with the next action, so we remove them here before adding to action log.
         text = text.split("Observation")[0].strip()
