@@ -19,13 +19,7 @@ from langchain.prompts.chat import (
     MessagesPlaceholder,
     SystemMessagePromptTemplate,
 )
-from langchain.schema import (
-    AgentAction,
-    AgentFinish,
-    AIMessage,
-    BasePromptTemplate,
-    HumanMessage,
-)
+from langchain.schema import AgentAction, AgentFinish, AIMessage, BasePromptTemplate
 from langchain.schema.language_model import BaseLanguageModel
 from langchain.tools import BaseTool
 
@@ -133,11 +127,7 @@ class CustomAgentExecutor(AgentExecutor):
     def prep_inputs(self, inputs: Union[Dict[str, Any], Any]) -> Dict[str, str]:
         inputs = super().prep_inputs(inputs)
         if self.memory is not None and isinstance(self.memory, BaseChatMemory):
-            msg = HumanMessage(
-                content=inputs[self.memory.input_key],
-                additional_kwargs={"id": uuid4().hex, "sent_at": utcnow().isoformat()},
-            )
-            self.memory.chat_memory.add_message(msg)
+            self.memory.chat_memory.add_user_message(inputs[self.memory.input_key])
         return inputs
 
     def prep_outputs(
@@ -149,7 +139,7 @@ class CustomAgentExecutor(AgentExecutor):
         """disable persist history"""
         self._validate_outputs(outputs)
         if self.memory is not None and isinstance(self.memory, BaseChatMemory):
-            additional_kwargs = {"id": uuid4().hex, "sent_at": utcnow().isoformat()}
+            additional_kwargs = {}
             if "intermediate_steps" in outputs:
                 wrap = IntermediateSteps.model_validate(outputs["intermediate_steps"])
                 additional_kwargs["intermediate_steps"] = wrap.model_dump_json()
