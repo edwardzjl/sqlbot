@@ -57,16 +57,8 @@ const ChatTab = (props) => {
     }
     const detailedConv = await getConversation(chat.id);
     dispatch({
-      type: "updated",
-      conversation: {
-        ...detailedConv,
-        messages: detailedConv.messages,
-      },
-    });
-    // switch to the selected conversation
-    dispatch({
       type: "selected",
-      id: chat.id,
+      data: detailedConv,
     });
   };
 
