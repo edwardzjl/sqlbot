@@ -48,7 +48,7 @@ const ChatMessage = (props) => {
         <ReactMarkdown
           className="chat-message-content"
           children={props.message.content}
-          // remarkPlugins={[remarkGfm]}
+          remarkPlugins={[remarkGfm]}
           components={{
             code({ node, inline, className, children, ...props }) {
               const match = /language-(\w+)/.exec(className || "");
