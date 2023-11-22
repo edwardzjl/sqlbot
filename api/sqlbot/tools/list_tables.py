@@ -3,14 +3,11 @@ from typing import Any, Optional
 
 from langchain.callbacks.manager import CallbackManagerForToolRun
 from langchain.tools.sql_database.tool import ListSQLDatabaseTool
-from pydantic import RedisDsn
 from pydantic.v1 import root_validator
 
 
 class CustomListTablesTool(ListSQLDatabaseTool):
-    """Tool for getting tables names.
-    Fake because it is not async at all, it's just a wrapper around the sync version.
-    """
+    """Tool for getting table names."""
 
     name: str = "sql_db_list_tables"
     description: str = (
@@ -46,12 +43,3 @@ class CustomListTablesTool(ListSQLDatabaseTool):
             if table_name in usable_tables:
                 res[table_name] = self.client.get(key)
         return json.dumps(res)
-
-    async def _arun(
-        self,
-        tool_input: str = "",
-        run_manager: Optional[CallbackManagerForToolRun] = None,
-    ) -> str:
-        """Get the schema for a specific table."""
-        # TODO: async redis need to manually close the connection pool
-        return self._run(tool_input, run_manager)

@@ -2,9 +2,13 @@
 
 from langchain.agents.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from langchain.tools import BaseTool
-from langchain.tools.sql_database.tool import InfoSQLDatabaseTool, QuerySQLCheckerTool
+from langchain.tools.sql_database.tool import (
+    InfoSQLDatabaseTool,
+    QuerySQLCheckerTool,
+    QuerySQLDataBaseTool,
+)
 
-from sqlbot.tools import CustomListTablesTool, FakeAsyncQuerySQLDataBaseTool
+from sqlbot.tools import CustomListTablesTool
 from sqlbot.tools.prompt import QUERY_CHECKER
 
 
@@ -36,10 +40,9 @@ class SQLBotToolkit(SQLDatabaseToolkit):
             f"'xxxx' in 'field list', or no such column 'xxxx', use {table_schema_tool.name} "
             "to get the correct table columns."
         )
-        query_sql_database_tool = FakeAsyncQuerySQLDataBaseTool(
+        query_sql_database_tool = QuerySQLDataBaseTool(
             db=self.db,
             description=query_sql_database_tool_description,
-            # callbacks=[human_approval_callback_handler],
         )
         query_sql_checker_tool_description = (
             "Use this tool to check if your query is correct before executing "
