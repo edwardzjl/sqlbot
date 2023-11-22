@@ -1,9 +1,9 @@
 {
-    "actors": "CREATE TABLE actors (\n\tid int,\n\tfirst_name text,\n\tlast_name text,\n\tgender text\n)",
-    "directors": "CREATE TABLE directors (\n\tid int,\n\tfirst_name text,\n\tlast_name text\n)",
-    "directors_genres": "CREATE TABLE directors_genres (\n\tdirector_id int,\n\tgenre text,\n\tprob float\n)",
-    "movies": "CREATE TABLE movies (\n\tid int,\n\tname text,\n\tyear int,\n\trank float\n)",
-    "movies_directors": "CREATE TABLE movies_directors (\n\tdirector_id int,\n\tmovie_id int\n)",
-    "movies_genres": "CREATE TABLE movies_genres (\n\tmovie_id int,\n\tgenre text\n)",
-    "roles": "CREATE TABLE roles (\n\tactor_id int,\n\tmovie_id int,\n\t\"role\" text\n)"
+    "actors": "CREATE TABLE actors (\n\tid int,\n\tfirst_name text,\n\tlast_name text,\n\tgender text\n)\n/*\n3 rows from actors table:\nid\tfirst_name\tlast_name\tgender\n581981\tRosy\tClayton\tF\n581982\tRuth\tClayton\tF\n581983\tSadie\tClayton\tF\n*/",
+    "directors": "CREATE TABLE directors (\n\tid int,\n\tfirst_name text,\n\tlast_name text\n)\n/*\n3 rows from directors table:\nid\tfirst_name\tlast_name\n1\tTodd\t1\n2\tLes\t12 Poissons\n3\tLejaren\ta'Hiller\n*/",
+    "directors_genres": "CREATE TABLE directors_genres (\n\tdirector_id int,\n\tgenre text,\n\tprob float\n)\n/*\n3 rows from directors_genres table:\ndirector_id\tgenre\tprob\n2\tShort\t1.0\n3\tDrama\t1.0\n5\tDocumentary\t1.0\n*/",
+    "movies": "CREATE TABLE movies (\n\tid int,\n\tname text,\n\tyear int,\n\trank float\n)\n/*\n3 rows from movies table:\nid\tname\tyear\trank\n0\t#28\t2002\tNone\n1\t#7 Train: An Immigrant Journey, The\t2000\tNone\n2\t$\t1971\t6.400000095367432\n*/",
+    "movies_directors": "CREATE TABLE movies_directors (\n\tdirector_id int,\n\tmovie_id int\n)\n/*\n3 rows from movies_directors table:\ndirector_id\tmovie_id\n1\t378879\n2\t281325\n3\t30621\n*/",
+    "movies_genres": "CREATE TABLE movies_genres (\n\tmovie_id int,\n\tgenre text\n)\n/*\n3 rows from movies_genres table:\nmovie_id\tgenre\n1\tDocumentary\n1\tShort\n2\tComedy\n*/",
+    "roles": "CREATE TABLE roles (\n\tactor_id int,\n\tmovie_id int,\n\t\"role\" text\n)\n/*\n3 rows from roles table:\nactor_id\tmovie_id\trole\n511477\t244919\tRodney\n511478\t309807\tBoom Box Operator\n511479\t158293\tStreet Singer/Young At Heart\n*/"
 }
