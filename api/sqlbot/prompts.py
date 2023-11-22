@@ -1,15 +1,15 @@
-from typing import Any, Sequence
+from typing import Any
 
 from langchain.prompts import ChatPromptTemplate
 from langchain.prompts.chat import ChatPromptValue, PromptValue
-from langchain.schema import (
-    AIMessage,
-    BaseMessage,
-    ChatMessage,
-    FunctionMessage,
-    HumanMessage,
-    SystemMessage,
-)
+from langchain.schema import AIMessage, ChatMessage, HumanMessage, SystemMessage
+
+SYSTEM_PREFIX = "<|im_start|>system"
+SYSTEM_SUFFIX = "<|im_end|>"
+HUMAN_PREFIX = "<|im_start|>user"
+HUMAN_SUFFIX = "<|im_end|>"
+AI_PREFIX = "<|im_start|>assistant"
+AI_SUFFIX = "<|im_end|>"
 
 
 class ChatMLPromptTemplate(ChatPromptTemplate):
@@ -23,85 +23,45 @@ class ChatMLPromptTemplate(ChatPromptTemplate):
 
 
 class ChatMLPromptValue(ChatPromptValue):
-    """Chat prompt value.
+    """Chat Markup Language prompt value.
 
     A type of a prompt value that is built from messages.
     """
 
-    messages: Sequence[BaseMessage]
-    """List of messages."""
+    system_prefix: str = SYSTEM_PREFIX
+    system_suffix: str = SYSTEM_SUFFIX
+    human_prefix: str = HUMAN_PREFIX
+    human_suffix: str = HUMAN_SUFFIX
+    ai_prefix: str = AI_PREFIX
+    ai_suffix: str = AI_SUFFIX
+    prefix_separator: str = "\n"
+    """separator between prefix and content"""
+    message_separator: str = "\n"
+    """separator between messages"""
 
     def to_string(self) -> str:
         """Return prompt as string."""
-        return f"{get_buffer_string(self.messages)}\n<|im_start|>assistant\n"
-
-    def to_messages(self) -> list[BaseMessage]:
-        """Return prompt as a list of messages."""
-        return list(self.messages)
-
-
-def get_buffer_string(
-    messages: Sequence[BaseMessage],
-    system_prefix: str = "<|im_start|>system",
-    system_suffix: str = "<|im_end|>\n",
-    function_prefix: str = "Function",
-    function_suffix: str = "",
-    human_prefix: str = "<|im_start|>user",
-    human_suffix: str = "<|im_end|>",
-    ai_prefix: str = "<|im_start|>assistant",
-    ai_suffix: str = "<|im_end|>",
-    prefix_separator: str = "\n",
-    message_separator: str = "\n",
-) -> str:
-    """Convert sequence of Messages to strings and concatenate them into one string.
-
-    Args:
-        messages: Messages to be converted to strings.
-        system_prefix: The prefix to prepend to contents of SystemMessages.
-        system_suffix: The suffix to append to contents of SystemMessages.
-        human_prefix: The prefix to prepend to contents of HumanMessages.
-        human_suffix: The suffix to append to contents of HumanMessages.
-        ai_prefix: The prefix to prepend to contents of AIMessages.
-        ai_suffix: The suffix to append to contents of AIMessages.
-        prefix_separator: The separator between message prefix and content.
-        message_separator: The separator between messages.
-
-    Returns:
-        A single string concatenation of all input messages.
-
-    Example:
-        .. code-block:: python
-
-            from langchain.schema import AIMessage, HumanMessage
-
-            messages = [
-                HumanMessage(content="Hi, how are you?"),
-                AIMessage(content="Good, how are you?"),
-            ]
-            get_buffer_string(messages)
-            # -> "Human: Hi, how are you?\nAI: Good, how are you?"
-    """
-    string_messages = []
-    for m in messages:
-        if isinstance(m, HumanMessage):
-            role = human_prefix
-            suffix = human_suffix
-        elif isinstance(m, AIMessage):
-            role = ai_prefix
-            suffix = ai_suffix
-        elif isinstance(m, SystemMessage):
-            role = system_prefix
-            suffix = system_suffix
-        elif isinstance(m, FunctionMessage):
-            role = function_prefix
-            suffix = function_suffix
-        elif isinstance(m, ChatMessage):
-            role = m.role
-        else:
-            raise ValueError(f"Got unsupported message type: {m}")
-        message = f"{role}{prefix_separator}{m.content}{suffix}"
-        if isinstance(m, AIMessage) and "function_call" in m.additional_kwargs:
-            message += f"{m.additional_kwargs['function_call']}"
-        string_messages.append(message)
-
-    return message_separator.join(string_messages)
+        string_messages = []
+        for m in self.messages:
+            if isinstance(m, HumanMessage):
+                prefix = self.human_prefix
+                suffix = self.human_suffix
+            elif isinstance(m, AIMessage):
+                prefix = self.ai_prefix
+                suffix = self.ai_suffix
+            elif isinstance(m, SystemMessage):
+                prefix = self.system_prefix
+                suffix = self.system_suffix
+            elif isinstance(m, ChatMessage):
+                prefix = m.role
+                suffix = ""
+            else:
+                raise ValueError(f"Got unsupported message type: {m}")
+            message = f"{prefix}{self.prefix_separator}{m.content}{suffix}"
+            if isinstance(m, AIMessage) and "function_call" in m.additional_kwargs:
+                message += f"{m.additional_kwargs['function_call']}"
+            string_messages.append(message)
+        # an empty message indicates that the assistant should start talking
+        string_messages.append(f"{self.ai_prefix}{self.prefix_separator}")
+        msgs = self.message_separator.join(string_messages)
+        return msgs

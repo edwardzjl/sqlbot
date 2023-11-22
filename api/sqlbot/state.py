@@ -1,5 +1,6 @@
 from typing import Optional
 
+from langchain.agents.agent_toolkits.base import BaseToolkit
 from langchain.llms.base import LLM
 from langchain.sql_database import SQLDatabase
 from pydantic import BaseModel, ConfigDict
@@ -16,6 +17,7 @@ class AppState(BaseModel):
     warehouse: Optional[SQLDatabase] = None
     llm: Optional[LLM] = None
     coder_llm: Optional[LLM] = None
+    toolkit: Optional[BaseToolkit] = None
 
 
 app_state = AppState()

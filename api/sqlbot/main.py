@@ -14,6 +14,7 @@ from langchain.llms.huggingface_text_gen_inference import HuggingFaceTextGenInfe
 from langchain.sql_database import SQLDatabase
 from loguru import logger
 
+from sqlbot.agent.toolkit import SQLBotToolkit
 from sqlbot.callbacks import TracingLLMCallbackHandler
 from sqlbot.config import settings
 from sqlbot.routers import router
@@ -48,7 +49,7 @@ async def lifespan(app: FastAPI):
         max_new_tokens=512,
         temperature=0.1,
         top_p=0.8,
-        stop_sequences=["</s>", "Observation", "Thought"],
+        stop_sequences=["</s>"],
         streaming=True,
         callbacks=[tracing_callback],
     )
@@ -58,6 +59,11 @@ async def lifespan(app: FastAPI):
         temperature=0.1,
         top_p=0.8,
         stop_sequences=["</s>"],
+    )
+    app_state.toolkit = SQLBotToolkit(
+        db=app_state.warehouse,
+        llm=app_state.coder_llm,
+        redis_url=str(settings.redis_om_url),
     )
     end = time.perf_counter()
     logger.info(f"App initialized in {(end - start):.4}s")
