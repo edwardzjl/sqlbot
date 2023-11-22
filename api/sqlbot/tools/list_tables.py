@@ -6,14 +6,24 @@ from langchain.tools.sql_database.tool import ListSQLDatabaseTool
 from pydantic.v1 import root_validator
 
 
-class CustomListTablesTool(ListSQLDatabaseTool):
+class ListTableTool(ListSQLDatabaseTool):
     """Tool for getting table names."""
 
-    name: str = "sql_db_list_tables"
-    description: str = (
-        "Use this tool to list all tables in the database. "
-        "Input to this tool is an empty string, output is a dict with table names as keys and table descriptions as values."
-    )
+    name: str = "list_table_tool"
+    description: str = f"""
+- {name}:
+  - Description: {name} can be used to list all available tables in the database.
+  - Usage Schema: When involking {name}, ensure that you provide a JSON object adhering to the following schema:
+
+    ```yaml
+    ToolRequest:
+      type: object
+      properties:
+        tool_name:
+          type: string
+          enum: ["{name}"]
+      required: [tool_name]
+    ```"""
 
     redis_url: str = "redis://localhost:6379"
     key_prefix: str = "sqlbot:tables:"
@@ -37,9 +47,10 @@ class CustomListTablesTool(ListSQLDatabaseTool):
     ) -> str:
         """Get the schema for a specific table."""
         usable_tables = self.db.get_usable_table_names()
-        res = {}
-        for key in self.client.scan_iter(f"{self.key_prefix}*"):
-            table_name = key.removeprefix(self.key_prefix)
-            if table_name in usable_tables:
-                res[table_name] = self.client.get(key)
-        return json.dumps(res)
+        return ", ".join(usable_tables)
+        # res = {}
+        # for key in self.client.scan_iter(f"{self.key_prefix}*"):
+        #     table_name = key.removeprefix(self.key_prefix)
+        #     if table_name in usable_tables:
+        #         res[table_name] = self.client.get(key)
+        # return json.dumps(res)

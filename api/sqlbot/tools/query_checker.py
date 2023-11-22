@@ -1,4 +1,4 @@
-QUERY_CHECKER = """
+QUERY_CHECKER_PROMPT = """
 {query}
 Double check the {dialect} query above for common mistakes, including:
 - Using NOT IN with NULL values

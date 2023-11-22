@@ -1,11 +1,11 @@
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from langchain.memory import RedisChatMessageHistory
 from loguru import logger
 
-from sqlbot.agent import SQLBotToolkit, create_sql_agent
-from sqlbot.agent.prompts import AI_PREFIX, AI_SUFFIX, HUMAN_PREFIX, HUMAN_SUFFIX
+from sqlbot.agent import create_sql_agent
 from sqlbot.callbacks import (
     LCErrorCallbackHandler,
     StreamingFinalAnswerCallbackHandler,
@@ -17,6 +17,7 @@ from sqlbot.config import settings
 from sqlbot.history import CustomRedisChatMessageHistory
 from sqlbot.memory import FlexConversationBufferWindowMemory
 from sqlbot.models import Conversation as ORMConversation
+from sqlbot.prompts import AI_PREFIX, AI_SUFFIX, HUMAN_PREFIX, HUMAN_SUFFIX
 from sqlbot.schemas import (
     ChatMessage,
     Conversation,
@@ -99,7 +100,6 @@ async def generate(
     userid: Annotated[str | None, UserIdHeader()] = None,
 ):
     await websocket.accept()
-
     while True:
         try:
             payload: str = await websocket.receive_text()
@@ -124,13 +124,6 @@ async def generate(
                 websocket, message.conversation, should_check=_require_approve
             )
 
-            toolkit = SQLBotToolkit(
-                db=app_state.warehouse,
-                llm=app_state.coder_llm,
-                redis_url=str(settings.redis_om_url),
-                conversation_id=message.conversation,
-            )
-
             history = CustomRedisChatMessageHistory(
                 url=str(settings.redis_om_url),
                 session_id=f"{userid}:{message.conversation}",
@@ -149,10 +142,7 @@ async def generate(
 
             agent_executor = create_sql_agent(
                 llm=app_state.llm,
-                toolkit=toolkit,
-                top_k=5,
-                max_iterations=10,
-                input_variables=["input", "agent_scratchpad", "history"],
+                toolkit=app_state.toolkit,
                 agent_executor_kwargs={
                     "memory": memory,
                     "return_intermediate_steps": True,
@@ -160,7 +150,12 @@ async def generate(
             )
 
             await agent_executor.acall(
-                message.content,
+                inputs={
+                    "date": date.today(),
+                    "input": message.content,
+                    "top_k": 10,
+                    "dialect": app_state.warehouse.dialect,
+                },
                 callbacks=[
                     streaming_thought_callback,
                     streaming_answer_callback,

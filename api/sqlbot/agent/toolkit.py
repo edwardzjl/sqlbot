@@ -1,5 +1,4 @@
 """Toolkit for interacting with a SQL database."""
-
 from langchain.agents.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from langchain.tools import BaseTool
 from langchain.tools.sql_database.tool import (
@@ -8,56 +7,93 @@ from langchain.tools.sql_database.tool import (
     QuerySQLDataBaseTool,
 )
 
-from sqlbot.tools import CustomListTablesTool
-from sqlbot.tools.prompt import QUERY_CHECKER
+from sqlbot.tools import QUERY_CHECKER_PROMPT, ListTableTool
 
 
 class SQLBotToolkit(SQLDatabaseToolkit):
     redis_url: str = "redis://localhost:6379"
-    conversation_id: str
 
     def get_tools(self) -> list[BaseTool]:
         """Get the tools in the toolkit."""
-        list_tables_tool = CustomListTablesTool(db=self.db, redis_url=self.redis_url)
-        table_schema_tool_description = (
-            "Use this tool to get the schema of specific tables. "
-            "Input to this tool is a comma-separated list of tables, output is the "
-            "schema and sample rows for those tables. "
-            "Be sure that the tables actually exist by calling "
-            f"{list_tables_tool.name} first! "
-            "Example Input: 'table1, table2, table3'"
-        )
+        list_table_tool = ListTableTool(db=self.db, redis_url=self.redis_url)
+
+        table_schema_tool_name = "table_schema_tool"
+        table_schema_tool_desc = f"""
+- {table_schema_tool_name}:
+  - Description: {table_schema_tool_name} can be used to get schema of specific tables. Be sure that the tables actually exist by calling {list_table_tool.name} first!
+  - Usage Schema: When involking {table_schema_tool_name}, ensure that you provide a JSON object adhering to the following schema:
+
+    ```yaml
+    ToolRequest:
+      type: object
+      properties:
+        tool_name:
+          type: string
+          enum: ["{table_schema_tool_name}"]
+        tool_input:
+          type: string
+          description: a comma-separated list of table names for which you wish to retrieve the schema
+      required: [tool_name, tool_input]
+    ```"""
         table_schema_tool = InfoSQLDatabaseTool(
             db=self.db,
-            description=table_schema_tool_description,
+            name=table_schema_tool_name,
+            description=table_schema_tool_desc,
         )
-        query_sql_database_tool_description = (
-            "Use this tool to execute query and get result from the database. "
-            "Input to this tool is a SQL query, output is a result from the database. "
-            "If the query is not correct, an error message will be returned. "
-            "If an error is returned, rewrite the query and try again. "
-            "If you encounter an issue with Unknown column "
-            f"'xxxx' in 'field list', or no such column 'xxxx', use {table_schema_tool.name} "
-            "to get the correct table columns."
-        )
-        query_sql_database_tool = QuerySQLDataBaseTool(
+
+        query_executor_tool_name = "query_executor"
+        query_executor_tool_desc = f"""
+- {query_executor_tool_name}:
+  - Description: {query_executor_tool_name} can be used to execute query and get result from the database. If the query is not correct, an error message will be returned. If an error is returned, rewrite the query and try again. If you encounter an issue with Unknown column 'xxxx' in 'field list', or no such column 'xxxx', use {table_schema_tool.name} to get the correct table columns.
+  - Usage Schema: When involking {query_executor_tool_name}, ensure that you provide a JSON object adhering to the following schema:
+
+    ```yaml
+    ToolRequest:
+      type: object
+      properties:
+        tool_name:
+          type: string
+          enum: ["{query_executor_tool_name}"]
+        tool_input:
+          type: string
+          description: the SQL query you want to execute
+      required: [tool_name, tool_input]
+    ```"""
+        query_executor_tool = QuerySQLDataBaseTool(
             db=self.db,
-            description=query_sql_database_tool_description,
+            name=query_executor_tool_name,
+            description=query_executor_tool_desc,
         )
-        query_sql_checker_tool_description = (
-            "Use this tool to check if your query is correct before executing "
-            "it. Always use this tool before executing a query with "
-            f"{query_sql_database_tool.name}!"
-        )
-        query_sql_checker_tool = QuerySQLCheckerTool(
+
+        query_checker_tool_name = "query_checker"
+        query_checker_tool_desc = f"""
+- {query_checker_tool_name}:
+  - Description: {query_checker_tool_name} can be used to check if your query is correct before executing it. Always use this tool before executing a query with {query_executor_tool.name}.
+  - Usage Schema: When involking {query_checker_tool_name}, ensure that you provide a JSON object adhering to the following schema:
+
+    ```yaml
+    ToolRequest:
+      type: object
+      properties:
+        tool_name:
+          type: string
+          enum: ["{query_checker_tool_name}"]
+        tool_input:
+          type: string
+          description: the SQL query you want to check
+      required: [tool_name, tool_input]
+    ```"""
+        query_checker_tool = QuerySQLCheckerTool(
             db=self.db,
             llm=self.llm,
-            description=query_sql_checker_tool_description,
-            template=QUERY_CHECKER,
+            name=query_checker_tool_name,
+            description=query_checker_tool_desc,
+            template=QUERY_CHECKER_PROMPT,
         )
+
         return [
-            list_tables_tool,
+            list_table_tool,
             table_schema_tool,
-            query_sql_checker_tool,
-            query_sql_database_tool,
+            query_checker_tool,
+            query_executor_tool,
         ]
