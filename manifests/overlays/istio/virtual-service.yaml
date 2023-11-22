@@ -4,7 +4,7 @@ metadata:
   name: sqlbot
 spec:
   hosts:
-    - "*"
+    - sqlbot.agi.zjuici.com
   gateways:
     - istio-system/istio-ingressgateway
   http:
@@ -14,6 +14,6 @@ spec:
             prefix: /
       route:
         - destination:
-            host: sqlbot.jlzhou.svc.cluster.local
+            host: sqlbot.jlzhou-sqlbot.svc.cluster.local
             port:
               number: 8000
