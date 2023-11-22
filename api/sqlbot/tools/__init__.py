@@ -1,2 +1,3 @@
 from sqlbot.tools.list_tables import CustomListTablesTool
-from sqlbot.tools.query import FakeAsyncQuerySQLDataBaseTool
+
+__all__ = ["CustomListTablesTool"]
