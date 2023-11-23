@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from langchain.memory import RedisChatMessageHistory
+from langchain.schema import HumanMessage
 from loguru import logger
 
 from sqlbot.agent import create_sql_agent
@@ -55,11 +56,11 @@ async def get_conversation(
     )
     return ConversationDetail(
         messages=[
-            ChatMessage.from_lc(lc_message=message, conv_id=conversation_id, from_="ai")
-            if message.type == "ai"
-            else ChatMessage.from_lc(
+            ChatMessage.from_lc(
                 lc_message=message, conv_id=conversation_id, from_=userid
             )
+            if isinstance(message, HumanMessage)
+            else ChatMessage.from_lc(lc_message=message, conv_id=conversation_id)
             for message in history.messages
         ],
         **conv.dict(),
