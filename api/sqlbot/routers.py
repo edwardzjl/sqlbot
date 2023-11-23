@@ -2,7 +2,7 @@ from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from langchain.memory import RedisChatMessageHistory
+from langchain.memory import ConversationBufferWindowMemory, RedisChatMessageHistory
 from langchain.schema import HumanMessage
 from loguru import logger
 
@@ -16,9 +16,8 @@ from sqlbot.callbacks import (
 )
 from sqlbot.config import settings
 from sqlbot.history import CustomRedisChatMessageHistory
-from sqlbot.memory import FlexConversationBufferWindowMemory
 from sqlbot.models import Conversation as ORMConversation
-from sqlbot.prompts import AI_PREFIX, AI_SUFFIX, HUMAN_PREFIX, HUMAN_SUFFIX
+from sqlbot.prompts import AI_PREFIX, HUMAN_PREFIX
 from sqlbot.schemas import (
     ChatMessage,
     Conversation,
@@ -129,11 +128,9 @@ async def generate(
                 url=str(settings.redis_om_url),
                 session_id=f"{userid}:{message.conversation}",
             )
-            memory = FlexConversationBufferWindowMemory(
+            memory = ConversationBufferWindowMemory(
                 human_prefix=HUMAN_PREFIX,
                 ai_prefix=AI_PREFIX,
-                user_suffix=HUMAN_SUFFIX,
-                ai_suffix=AI_SUFFIX,
                 memory_key="history",
                 chat_memory=history,
                 return_messages=True,
