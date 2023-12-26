@@ -23,7 +23,7 @@ websockets = "~=12.0"
 [dev-packages]
 black = "*"
 isort = "*"
-psycopg = {extras = ["binary"], version = "~=3.1.15"}
+psycopg = {extras = ["binary"], version = "~=3.1.16"}
 
 [prod-packages]
 psycopg = {extras = ["c"], version = "~=3.1.12"}
